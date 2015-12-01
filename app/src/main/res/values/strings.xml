@@ -20,7 +20,8 @@
     <string name="share_with_facebook">Share using facebook</string>
     <string name="view">View</string>
     <string name="install_facebook_app">Please install facebook app</string>
-
-    <!--Login Screen -->
+    <string name="uploading">Uploading …</string>
+    <string name="downloading">Downloading…</string>
+    <string name="loading">Loading …</string>
 
 </resources>

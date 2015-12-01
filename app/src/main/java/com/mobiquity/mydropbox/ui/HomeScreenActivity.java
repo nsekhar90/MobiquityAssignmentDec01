@@ -75,6 +75,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     private String photoPathForPicassa;
     private Bus bus;
     private ProgressBar progressBar;
+    private Toolbar toolbar;
 
     private GoogleApiClient googleApiClient;
     private boolean resolvingGooglePlayConnectionError = false;
@@ -87,7 +88,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         super.onCreate(savedInstanceState);
         bus = DropboxApp.getBus();
         setContentView(R.layout.activity_home_screen);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         FloatingActionButton takePictureButton = (FloatingActionButton) findViewById(R.id.fab);
@@ -128,6 +129,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
 
     @Override
     protected void loadData() {
+        toolbar.setTitle(R.string.loading);
         progressBar.setVisibility(View.VISIBLE);
         adapter = new FilesAdapter(PicassoClient.getPicasso(), new FileClickListener());
         new ListFolderTask(DropboxClient.files()).execute("");
@@ -150,11 +152,6 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
                 Auth.startOAuth2Authentication(this, DropboxApp.DROPBOX_APP_KEY);
                 break;
         }
-    }
-
-    private void downloadFile(DbxFiles.FileMetadata file) {
-        progressBar.setVisibility(View.VISIBLE);
-        new DownloadFileTask(HomeScreenActivity.this, DropboxClient.files()).execute(file);
     }
 
     private void viewFileInExternalApp(File result) {
@@ -234,55 +231,59 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     }
 
     private void uploadFile(String fileUri) {
+        toolbar.setTitle(R.string.uploading);
         progressBar.setVisibility(View.VISIBLE);
         new UploadFileTask(this, DropboxClient.files()).execute(fileUri, lastKnownCity);
     }
 
     @Subscribe
     public void onUploadCompleted(OnUploadSuccessfulEvent result) {
-        progressBar.setVisibility(View.GONE);
+        resetToolbarTitle();
         Snackbar.make(homeScreenContainer, R.string.upload_successful, Snackbar.LENGTH_SHORT).show();
     }
 
     @Subscribe
     public void onUploadFailedEvent(OnUploadFailedEvent event) {
+        resetToolbarTitle();
         if (event.getException() != null) {
             Snackbar.make(homeScreenContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
         }
-        progressBar.setVisibility(View.GONE);
     }
 
 
     @Subscribe
     public void onDataLoadedEvent(OnDataLoadedEvent event) {
-        progressBar.setVisibility(View.GONE);
+        resetToolbarTitle();
         adapter.setFiles(event.getResult().entries);
     }
 
     @Subscribe
     public void onDataLoadFailedEvent(OnDataLoadFailedEvent event) {
-        progressBar.setVisibility(View.GONE);
+        resetToolbarTitle();
         Toast.makeText(HomeScreenActivity.this,
                 "An error has occurred",
                 Toast.LENGTH_SHORT)
                 .show();
     }
 
+    private void downloadFile(DbxFiles.FileMetadata file) {
+        toolbar.setTitle(R.string.downloading);
+        progressBar.setVisibility(View.VISIBLE);
+        new DownloadFileTask(HomeScreenActivity.this, DropboxClient.files()).execute(file);
+    }
+
     @Subscribe
     public void onDownloadFileSuccessEvent(OnDownloadFileSuccessEvent event) {
-        progressBar.setVisibility(View.GONE);
+        resetToolbarTitle();
         File file = event.getFile();
         ImageOptionsDialogFragment imageOptionsDialogFragment = ImageOptionsDialogFragment.newInstance(file);
         imageOptionsDialogFragment.show(getFragmentManager(), "ImageOptionsDialogFragment_TAG");
-        }
+    }
 
     @Subscribe
     public void onDownloadFileFailedEvent(OnDownloadFileFailedEvent event) {
-        progressBar.setVisibility(View.GONE);
-        Toast.makeText(HomeScreenActivity.this,
-                "An error has occurred",
-                Toast.LENGTH_SHORT)
-                .show();
+        resetToolbarTitle();
+        Snackbar.make(homeScreenContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
     }
 
     @Override
@@ -371,5 +372,10 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         public void onFileClicked(DbxFiles.FileMetadata file) {
             downloadFile(file);
         }
+    }
+
+    private void resetToolbarTitle() {
+        toolbar.setTitle(R.string.app_name);
+        progressBar.setVisibility(View.GONE);
     }
 }
