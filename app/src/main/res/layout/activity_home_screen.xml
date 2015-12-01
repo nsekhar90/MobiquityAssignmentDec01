@@ -38,8 +38,7 @@
         android:id="@+id/login_view_switcher"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingLeft="30dp"
-        android:paddingRight="30dp"
+        android:padding="5dp"
         android:visibility="visible">
 
         <android.support.design.widget.CoordinatorLayout
@@ -59,6 +58,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|end"
                 android:layout_marginBottom="25dp"
+                android:layout_marginRight="15dp"
                 android:src="@android:drawable/ic_menu_camera" />
 
         </android.support.design.widget.CoordinatorLayout>
