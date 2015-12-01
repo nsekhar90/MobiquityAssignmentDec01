@@ -89,18 +89,14 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.MetadataView
                 String type = mime.getMimeTypeFromExtension(ext);
                 if (type != null && type.startsWith("image/")) {
                     picasso.load(FileThumbnailRequestHandler.buildPicassoUri((DbxFiles.FileMetadata) item))
-                            .placeholder(R.drawable.ic_photo_grey_600_36dp)
-                            .error(R.drawable.ic_photo_grey_600_36dp)
+                            .placeholder(R.drawable.ic_photo_grey_rounded)
+                            .error(R.drawable.ic_photo_grey_rounded)
                             .into(mImageView);
                 } else {
-                    picasso.load(R.drawable.ic_insert_drive_file_blue_36dp)
+                    picasso.load(R.drawable.ic_insert_drive_file)
                             .noFade()
                             .into(mImageView);
                 }
-            } else if (item instanceof DbxFiles.FolderMetadata) {
-                picasso.load(R.drawable.ic_folder_blue_36dp)
-                        .noFade()
-                        .into(mImageView);
             }
         }
     }
