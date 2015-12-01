@@ -91,7 +91,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.5"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@drawable/white_button_selector"
             android:text="@string/cancel" />
 
         <Button
@@ -99,7 +99,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.5"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@drawable/white_button_selector"
             android:text="@string/upload" />
 
     </LinearLayout>
