@@ -17,7 +17,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.webkit.MimeTypeMap;
@@ -46,7 +45,6 @@ import com.mobiquity.mydropbox.networking.task.DownloadFileTask;
 import com.mobiquity.mydropbox.networking.task.ListFolderTask;
 import com.mobiquity.mydropbox.networking.task.UploadFileTask;
 import com.mobiquity.mydropbox.ui.fragment.dialog.ImageOptionsDialogFragment;
-import com.mobiquity.mydropbox.ui.fragment.dialog.UploadPictureDialogFragment;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
@@ -58,7 +56,6 @@ import java.util.List;
 import java.util.Locale;
 
 public class HomeScreenActivity extends DropboxActivity implements View.OnClickListener,
-        UploadPictureDialogFragment.UploadPictureDialogFragmentDialogActionListener,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
         ImageOptionsDialogFragment.ImageOptionsDialogFragmentActionListener {
 
@@ -197,10 +194,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
                 uri = data.getData();
             }
             if (uri == null && currentPhotoPath != null) {
-                uri = Uri.fromFile(new File(currentPhotoPath));
-                UploadPictureDialogFragment uploadPictureDialogFragment =
-                        UploadPictureDialogFragment.newInstance(photoPathForPicassa, lastKnownLatitude, lastKnownLongitude, lastKnownCity);
-                uploadPictureDialogFragment.show(getFragmentManager(), "UPLOAD_DIALOG_FRAGMENT_TAG");
+                UploadImageActivity.start(this, currentPhotoPath, photoPathForPicassa, lastKnownLatitude, lastKnownLongitude, lastKnownCity);
             }
         }
     }
@@ -218,22 +212,6 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         currentPhotoPath = "file:" + image.getAbsolutePath();
         photoPathForPicassa = image.getAbsolutePath();
         return image;
-    }
-
-    @Override
-    public void onUploadClicked(String currentPhotoPath) {
-        if (hasToken()) {
-            Log.e("findMe", "calling upload file");
-            uploadFile(this.currentPhotoPath);
-        } else {
-            Auth.startOAuth2Authentication(this, DropboxApp.DROPBOX_APP_KEY);
-        }
-    }
-
-    private void uploadFile(String fileUri) {
-        toolbar.setTitle(R.string.uploading);
-        progressBar.setVisibility(View.VISIBLE);
-        new UploadFileTask(this, DropboxClient.files()).execute(fileUri, lastKnownCity);
     }
 
     @Subscribe

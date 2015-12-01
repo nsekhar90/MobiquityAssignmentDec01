@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/upload_image_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/app_bar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:layout_scrollFlags="scroll|enterAlways|snap"
+            app:popupTheme="@style/AppTheme.PopupOverlay" />
+
+        <ProgressBar
+            android:id="@+id/download_progress_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            android:indeterminate="true"
+            android:minHeight="10dp"
+            android:visibility="gone" />
+
+    </android.support.design.widget.AppBarLayout>
+
+    <TextView
+        android:id="@+id/image_latitude_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/app_bar_layout"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="5dp"
+        android:padding="3dp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/image_longitude_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/image_latitude_textview"
+        android:layout_marginLeft="15dp"
+        android:padding="3dp"
+        android:text="longitude"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/image_city_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/image_longitude_textview"
+        android:layout_marginLeft="15dp"
+        android:padding="3dp"
+        android:text="Charlotte"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.MapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_below="@id/image_city_textview" />
+
+    <ImageView
+        android:id="@+id/upload_picture_fragment_image"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_below="@id/map"
+        android:layout_gravity="center"
+        android:layout_margin="25dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/cancel_button"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:text="@string/cancel" />
+
+        <Button
+            android:id="@+id/ok_button"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:text="@string/upload" />
+
+    </LinearLayout>
+
+</RelativeLayout>

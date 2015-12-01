@@ -23,5 +23,7 @@
     <string name="uploading">Uploading …</string>
     <string name="downloading">Downloading…</string>
     <string name="loading">Loading …</string>
+    <string name="upload">upload</string>
+    <string name="cancel">cancel</string>
 
 </resources>
