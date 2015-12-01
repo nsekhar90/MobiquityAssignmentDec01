@@ -54,7 +54,6 @@ public class UploadFileTask extends AsyncTask<String, Void, DbxFiles.FileMetadat
                 }
             } catch (DbxException | IOException e) {
                 e.printStackTrace();
-                bus.post(new OnUploadFailedEvent(e));
             }
         }
 
@@ -66,7 +65,7 @@ public class UploadFileTask extends AsyncTask<String, Void, DbxFiles.FileMetadat
     protected void onPostExecute(DbxFiles.FileMetadata result) {
         super.onPostExecute(result);
         if (result == null) {
-            bus.post(new OnUploadFailedEvent(null));
+            bus.post(new OnUploadFailedEvent());
         } else {
             bus.post(new OnUploadSuccessfulEvent(result));
         }

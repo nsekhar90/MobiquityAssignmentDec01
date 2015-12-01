@@ -1,6 +1,7 @@
 package com.mobiquity.mydropbox.networking.task;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.dropbox.core.DbxException;
 import com.dropbox.core.v2.DbxFiles;
@@ -27,7 +28,7 @@ public class ListFolderTask extends AsyncTask<String, Void, DbxFiles.ListFolderR
         try {
             return dbxFiles.listFolder(params[0]);
         } catch (DbxException e) {
-            bus.post(new OnDataLoadFailedEvent());
+            Log.e("ListFolderTask", e.getMessage());
         }
 
         return null;
@@ -36,7 +37,11 @@ public class ListFolderTask extends AsyncTask<String, Void, DbxFiles.ListFolderR
     @Override
     protected void onPostExecute(DbxFiles.ListFolderResult result) {
         super.onPostExecute(result);
-        bus.post(new OnDataLoadedEvent(result));
+        if (result == null) {
+            bus.post(new OnDataLoadFailedEvent());
+        } else {
+            bus.post(new OnDataLoadedEvent(result));
+        }
     }
 
 }

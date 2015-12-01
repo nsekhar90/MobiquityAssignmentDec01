@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.util.Log;
 
 import com.dropbox.core.DbxException;
 import com.dropbox.core.v2.DbxFiles;
@@ -57,7 +58,7 @@ public class DownloadFileTask extends AsyncTask<DbxFiles.FileMetadata, Void, Fil
 
             return file;
         } catch (DbxException | IOException e) {
-            bus.post(new OnDownloadFileFailedEvent());
+           Log.e("DownloadFileTask", e.getMessage());
         }
 
         return null;
@@ -66,7 +67,11 @@ public class DownloadFileTask extends AsyncTask<DbxFiles.FileMetadata, Void, Fil
     @Override
     protected void onPostExecute(File result) {
         super.onPostExecute(result);
-        bus.post(new OnDownloadFileSuccessEvent(result));
+        if (result == null) {
+            bus.post(new OnDownloadFileFailedEvent());
+        } else {
+            bus.post(new OnDownloadFileSuccessEvent(result));
+        }
     }
 
 }

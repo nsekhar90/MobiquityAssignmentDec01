@@ -142,9 +142,7 @@ public class UploadImageActivity extends AppCompatActivity implements OnMapReady
     @Subscribe
     public void onUploadFailedEvent(OnUploadFailedEvent event) {
         resetToolbarTitle();
-        if (event.getException() != null) {
-            Snackbar.make(uploadImageContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
-        }
+        Snackbar.make(uploadImageContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
         finish();
     }
 

@@ -165,21 +165,6 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     }
 
     @Subscribe
-    public void onUploadCompleted(OnUploadSuccessfulEvent result) {
-        resetToolbarTitle();
-        Snackbar.make(homeScreenContainer, R.string.upload_successful, Snackbar.LENGTH_SHORT).show();
-    }
-
-    @Subscribe
-    public void onUploadFailedEvent(OnUploadFailedEvent event) {
-        resetToolbarTitle();
-        if (event.getException() != null) {
-            Snackbar.make(homeScreenContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
-        }
-    }
-
-
-    @Subscribe
     public void onDataLoadedEvent(OnDataLoadedEvent event) {
         resetToolbarTitle();
         adapter.setFiles(event.getResult().entries);
