@@ -14,6 +14,12 @@
     <string name="image_latitude_text">"latitude: %1$s"</string>
     <string name="image_longitude_text">"longitude: %1$s"</string>
     <string name="image_city_text">"city: %1$s"</string>
+    <string name="install">install</string>
+    <string name="play_store_uri_format">market://details?id=%s</string>
+    <string name="download">Download</string>
+    <string name="share_with_facebook">Share using facebook</string>
+    <string name="view">View</string>
+    <string name="install_facebook_app">Please install facebook app</string>
 
     <!--Login Screen -->
 

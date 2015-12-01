@@ -45,6 +45,7 @@ import com.mobiquity.mydropbox.event.OnUploadSuccessfulEvent;
 import com.mobiquity.mydropbox.networking.task.DownloadFileTask;
 import com.mobiquity.mydropbox.networking.task.ListFolderTask;
 import com.mobiquity.mydropbox.networking.task.UploadFileTask;
+import com.mobiquity.mydropbox.ui.fragment.dialog.ImageOptionsDialogFragment;
 import com.mobiquity.mydropbox.ui.fragment.dialog.UploadPictureDialogFragment;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
@@ -57,7 +58,9 @@ import java.util.List;
 import java.util.Locale;
 
 public class HomeScreenActivity extends DropboxActivity implements View.OnClickListener,
-        UploadPictureDialogFragment.UploadPictureDialogFragmentDialogActionListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+        UploadPictureDialogFragment.UploadPictureDialogFragmentDialogActionListener,
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+        ImageOptionsDialogFragment.ImageOptionsDialogFragmentActionListener {
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     // Request code to use when launching the resolution activity
@@ -269,10 +272,9 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     public void onDownloadFileSuccessEvent(OnDownloadFileSuccessEvent event) {
         progressBar.setVisibility(View.GONE);
         File file = event.getFile();
-        if (file != null) {
-            viewFileInExternalApp(file);
+        ImageOptionsDialogFragment imageOptionsDialogFragment = ImageOptionsDialogFragment.newInstance(file);
+        imageOptionsDialogFragment.show(getFragmentManager(), "ImageOptionsDialogFragment_TAG");
         }
-    }
 
     @Subscribe
     public void onDownloadFileFailedEvent(OnDownloadFileFailedEvent event) {
@@ -327,6 +329,40 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
             resolvingGooglePlayConnectionError = false;
         }
 
+    }
+
+    @Override
+    public void onShareClicked(File file) {
+        if (file != null) {
+            Intent shareIntent = new Intent();
+            shareIntent.setAction(Intent.ACTION_SEND);
+            shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(file.toString()));
+            shareIntent.setType("image/jpeg");
+            List<ResolveInfo> resInfo = getPackageManager().queryIntentActivities(shareIntent, 0);
+            if (resInfo != null) {
+                for (ResolveInfo resolveInfo : resInfo) {
+                    if (resolveInfo.activityInfo.packageName.contains("facebook")) {
+                        shareIntent.setPackage(resolveInfo.activityInfo.packageName);
+                        startActivity(Intent.createChooser(shareIntent, "Share"));
+                        break;
+                    }
+                }
+            } else {
+                Snackbar.make(homeScreenContainer, R.string.install_facebook_app, Snackbar.LENGTH_SHORT)
+                        .setAction(R.string.install, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent intent = new Intent(Intent.ACTION_VIEW);
+                                intent.setData(Uri.parse(String.format(getString(R.string.play_store_uri_format), "com.facebook.katana")));
+                            }
+                        }).show();
+            }
+        }
+    }
+
+    @Override
+    public void OnViewClicked(File file) {
+        viewFileInExternalApp(file);
     }
 
     private class FileClickListener implements FilesAdapter.FilesAdapterActionClickListener {

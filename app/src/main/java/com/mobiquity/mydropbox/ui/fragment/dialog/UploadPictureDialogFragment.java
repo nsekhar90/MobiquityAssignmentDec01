@@ -28,11 +28,11 @@ public class UploadPictureDialogFragment extends DialogFragment {
     private double longitude;
     private String cityName;
 
-    public static UploadPictureDialogFragment newInstance(String picturePath, double latitutude, double longitude, String city) {
+    public static UploadPictureDialogFragment newInstance(String picturePath, double latitude, double longitude, String city) {
         UploadPictureDialogFragment uploadPictureDialogFragment = new UploadPictureDialogFragment();
         Bundle bundle = new Bundle();
         bundle.putString(KEY_PICTURE_URI, picturePath);
-        bundle.putDouble(KEY_LATITUDE, latitutude);
+        bundle.putDouble(KEY_LATITUDE, latitude);
         bundle.putDouble(KEY_LONGITUDE, longitude);
         bundle.putString(KEY_CITY, city);
         uploadPictureDialogFragment.setArguments(bundle);
