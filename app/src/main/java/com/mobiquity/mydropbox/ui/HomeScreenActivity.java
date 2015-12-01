@@ -43,7 +43,6 @@ import com.mobiquity.mydropbox.event.OnUploadFailedEvent;
 import com.mobiquity.mydropbox.event.OnUploadSuccessfulEvent;
 import com.mobiquity.mydropbox.networking.task.DownloadFileTask;
 import com.mobiquity.mydropbox.networking.task.ListFolderTask;
-import com.mobiquity.mydropbox.networking.task.UploadFileTask;
 import com.mobiquity.mydropbox.ui.fragment.dialog.ImageOptionsDialogFragment;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
