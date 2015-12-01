@@ -235,7 +235,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
 
     private void uploadFile(String fileUri) {
         progressBar.setVisibility(View.VISIBLE);
-        new UploadFileTask(this, DropboxClient.files()).execute(fileUri, currentPhotoPath);
+        new UploadFileTask(this, DropboxClient.files()).execute(fileUri, lastKnownCity);
     }
 
     @Subscribe
