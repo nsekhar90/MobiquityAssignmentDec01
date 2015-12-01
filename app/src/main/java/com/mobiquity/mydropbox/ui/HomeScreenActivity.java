@@ -39,10 +39,8 @@ import com.mobiquity.mydropbox.event.OnDataLoadFailedEvent;
 import com.mobiquity.mydropbox.event.OnDataLoadedEvent;
 import com.mobiquity.mydropbox.event.OnDownloadFileFailedEvent;
 import com.mobiquity.mydropbox.event.OnDownloadFileSuccessEvent;
-import com.mobiquity.mydropbox.event.OnUploadFailedEvent;
-import com.mobiquity.mydropbox.event.OnUploadSuccessfulEvent;
 import com.mobiquity.mydropbox.networking.task.DownloadFileTask;
-import com.mobiquity.mydropbox.networking.task.ListFolderTask;
+import com.mobiquity.mydropbox.networking.task.ListItemsInFolderTask;
 import com.mobiquity.mydropbox.ui.fragment.dialog.ImageOptionsDialogFragment;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
@@ -128,7 +126,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         toolbar.setTitle(R.string.loading);
         progressBar.setVisibility(View.VISIBLE);
         adapter = new FilesAdapter(PicassoClient.getPicasso(), new FileClickListener());
-        new ListFolderTask(DropboxClient.files()).execute("");
+        new ListItemsInFolderTask(DropboxClient.files()).execute("");
         filesRecyclerView.setAdapter(adapter);
     }
 

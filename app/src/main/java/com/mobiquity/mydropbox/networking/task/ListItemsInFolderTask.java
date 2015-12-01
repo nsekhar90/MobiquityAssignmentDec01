@@ -13,12 +13,12 @@ import com.squareup.otto.Bus;
 /**
  * Async task to list items in a folder
  */
-public class ListFolderTask extends AsyncTask<String, Void, DbxFiles.ListFolderResult> {
+public class ListItemsInFolderTask extends AsyncTask<String, Void, DbxFiles.ListFolderResult> {
 
     private final DbxFiles dbxFiles;
     private Bus bus;
 
-    public ListFolderTask(DbxFiles filesClient) {
+    public ListItemsInFolderTask(DbxFiles filesClient) {
         dbxFiles = filesClient;
         bus = DropboxApp.getBus();
     }
@@ -28,7 +28,7 @@ public class ListFolderTask extends AsyncTask<String, Void, DbxFiles.ListFolderR
         try {
             return dbxFiles.listFolder(params[0]);
         } catch (DbxException e) {
-            Log.e("ListFolderTask", e.getMessage());
+            Log.e("ListItemsInFolderTask", e.getMessage());
         }
 
         return null;

@@ -15,6 +15,7 @@ import java.io.File;
 public class ImageOptionsDialogFragment extends DialogFragment {
 
     private static final String KEY_PICTURE_URI = "KEY_PICTURE_URI";
+
     private ImageOptionsDialogFragmentActionListener listener;
     private File pictureFile;
 

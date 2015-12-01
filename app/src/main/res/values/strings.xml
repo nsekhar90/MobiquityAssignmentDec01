@@ -25,5 +25,6 @@
     <string name="loading">Loading …</string>
     <string name="upload">upload</string>
     <string name="cancel">cancel</string>
+    <string name="image_options_dialog_title">Choose an option</string>
 
 </resources>
