@@ -8,8 +8,35 @@
         android:layout_width="250dp"
         android:layout_height="wrap_content"
         android:padding="15dp"
+        android:gravity="center"
+        android:textSize="20sp"
+        android:textColor="@color/black"
+        android:text="@string/upload_image"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/image_latitude_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:textStyle="bold"
-        android:text="@string/upload_image"/>
+        android:padding="3dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/image_longitude_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:padding="3dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/image_city_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:padding="3dp"
+        android:visibility="gone" />
 
     <ImageView
         android:id="@+id/upload_picture_fragment_image"
@@ -24,18 +51,18 @@
         <Button
             android:id="@+id/cancel_button"
             android:layout_width="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="0.5"
-            android:text="cancel"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:layout_height="match_parent" />
+            android:text="cancel" />
 
         <Button
             android:id="@+id/ok_button"
             android:layout_width="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="0.5"
-            android:text="ok"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:layout_height="match_parent" />
+            android:text="ok" />
 
     </LinearLayout>
 

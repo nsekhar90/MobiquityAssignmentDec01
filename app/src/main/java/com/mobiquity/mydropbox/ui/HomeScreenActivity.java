@@ -1,9 +1,12 @@
 package com.mobiquity.mydropbox.ui;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -24,6 +27,9 @@ import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
 import com.dropbox.core.v2.DbxFiles;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 import com.mobiquity.mydropbox.Auth;
 import com.mobiquity.mydropbox.DropboxApp;
 import com.mobiquity.mydropbox.DropboxClient;
@@ -48,11 +54,14 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class HomeScreenActivity extends DropboxActivity implements View.OnClickListener,
-        UploadPictureDialogFragment.UploadPictureDialogFragmentDialogActionListener {
+        UploadPictureDialogFragment.UploadPictureDialogFragmentDialogActionListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
+    // Request code to use when launching the resolution activity
+    private static final int REQUEST_RESOLVE_ERROR = 1001;
 
     private String currentPhotoPath;
     private RecyclerView filesRecyclerView;
@@ -63,6 +72,12 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     private String photoPathForPicassa;
     private Bus bus;
     private ProgressBar progressBar;
+
+    private GoogleApiClient googleApiClient;
+    private boolean resolvingGooglePlayConnectionError = false;
+    private double lastKnownLatitude = 0;
+    private double lastKnownLongitude = 0;
+    private String lastKnownCity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +100,12 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         loginButton.setOnClickListener(this);
 
         loginScreenSwitcher.setDisplayedChild(hasToken() ? 0 : 1);
+
+        googleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
     }
 
     @Override
@@ -92,12 +113,14 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         super.onResume();
         bus.register(this);
         loginScreenSwitcher.setDisplayedChild(hasToken() ? 0 : 1);
+        googleApiClient.connect();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         bus.unregister(this);
+        googleApiClient.disconnect();
     }
 
     @Override
@@ -175,7 +198,8 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
             }
             if (uri == null && currentPhotoPath != null) {
                 uri = Uri.fromFile(new File(currentPhotoPath));
-                UploadPictureDialogFragment uploadPictureDialogFragment = UploadPictureDialogFragment.newInstance(photoPathForPicassa);
+                UploadPictureDialogFragment uploadPictureDialogFragment =
+                        UploadPictureDialogFragment.newInstance(photoPathForPicassa, lastKnownLatitude, lastKnownLongitude, lastKnownCity);
                 uploadPictureDialogFragment.show(getFragmentManager(), "UPLOAD_DIALOG_FRAGMENT_TAG");
             }
         }
@@ -259,7 +283,53 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
                 .show();
     }
 
-    private class FileClickListener implements  FilesAdapter.FilesAdapterActionClickListener {
+    @Override
+    public void onConnected(Bundle bundle) {
+        Location lastKnownLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        if (lastKnownLocation != null) {
+            lastKnownLongitude = lastKnownLocation.getLongitude();
+            lastKnownLatitude = lastKnownLocation.getLatitude();
+
+            Geocoder geocoder = new Geocoder(getBaseContext(), Locale.getDefault());
+            List<Address> addresses = null;
+            try {
+                addresses = geocoder.getFromLocation(lastKnownLatitude, lastKnownLongitude, 1);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (addresses != null) {
+                if (addresses.size() > 0) {
+                    lastKnownCity = addresses.get(0).getLocality();
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Snackbar.make(homeScreenContainer, R.string.unable_to_connect_to_play_services_message, Snackbar.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Snackbar.make(homeScreenContainer, R.string.unable_to_connect_to_play_services_message, Snackbar.LENGTH_SHORT).show();
+        if (resolvingGooglePlayConnectionError) {
+            return;
+        } else if (connectionResult.hasResolution()) {
+            try {
+                resolvingGooglePlayConnectionError = true;
+                connectionResult.startResolutionForResult(this, REQUEST_RESOLVE_ERROR);
+            } catch (IntentSender.SendIntentException e) {
+                googleApiClient.connect();
+            }
+        } else {
+            Snackbar.make(homeScreenContainer, R.string.unable_to_connect_to_play_services_message, Snackbar.LENGTH_SHORT).show();
+            resolvingGooglePlayConnectionError = false;
+        }
+
+    }
+
+    private class FileClickListener implements FilesAdapter.FilesAdapterActionClickListener {
 
         @Override
         public void onFileClicked(DbxFiles.FileMetadata file) {
