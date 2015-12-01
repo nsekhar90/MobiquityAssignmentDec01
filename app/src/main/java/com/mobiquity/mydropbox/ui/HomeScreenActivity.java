@@ -150,40 +150,6 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         }
     }
 
-    private void viewFileInExternalApp(File result) {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        MimeTypeMap mime = MimeTypeMap.getSingleton();
-        String ext = result.getName().substring(result.getName().indexOf(".") + 1);
-        String type = mime.getMimeTypeFromExtension(ext);
-
-        intent.setDataAndType(Uri.fromFile(result), type);
-
-        // Check for a handler first to avoid a crash
-        PackageManager manager = getPackageManager();
-        List<ResolveInfo> resolveInfo = manager.queryIntentActivities(intent, 0);
-        if (resolveInfo.size() > 0) {
-            startActivity(intent);
-        }
-    }
-
-    private void dispatchTakePictureIntent() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            File photoFile = null;
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-                Snackbar.make(homeScreenContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
-            }
-            if (photoFile != null) {
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-            }
-        } else {
-            Snackbar.make(homeScreenContainer, R.string.no_camera_app_error_message, Snackbar.LENGTH_SHORT).show();
-        }
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -196,21 +162,6 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
                 UploadImageActivity.start(this, currentPhotoPath, photoPathForPicassa, lastKnownLatitude, lastKnownLongitude, lastKnownCity);
             }
         }
-    }
-
-    private File createImageFile() throws IOException {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = timeStamp + "_";
-        File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,
-                ".png",
-                storageDir
-        );
-
-        currentPhotoPath = "file:" + image.getAbsolutePath();
-        photoPathForPicassa = image.getAbsolutePath();
-        return image;
     }
 
     @Subscribe
@@ -241,12 +192,6 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
                 "An error has occurred",
                 Toast.LENGTH_SHORT)
                 .show();
-    }
-
-    private void downloadFile(DbxFiles.FileMetadata file) {
-        toolbar.setTitle(R.string.downloading);
-        progressBar.setVisibility(View.VISIBLE);
-        new DownloadFileTask(HomeScreenActivity.this, DropboxClient.files()).execute(file);
     }
 
     @Subscribe
@@ -355,4 +300,61 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         toolbar.setTitle(R.string.app_name);
         progressBar.setVisibility(View.GONE);
     }
+
+    private void downloadFile(DbxFiles.FileMetadata file) {
+        toolbar.setTitle(R.string.downloading);
+        progressBar.setVisibility(View.VISIBLE);
+        new DownloadFileTask(HomeScreenActivity.this, DropboxClient.files()).execute(file);
+    }
+
+    private File createImageFile() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = timeStamp + "_";
+        File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,
+                ".png",
+                storageDir
+        );
+
+        currentPhotoPath = "file:" + image.getAbsolutePath();
+        photoPathForPicassa = image.getAbsolutePath();
+        return image;
+    }
+
+
+    private void viewFileInExternalApp(File result) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        MimeTypeMap mime = MimeTypeMap.getSingleton();
+        String ext = result.getName().substring(result.getName().indexOf(".") + 1);
+        String type = mime.getMimeTypeFromExtension(ext);
+
+        intent.setDataAndType(Uri.fromFile(result), type);
+
+        // Check for a handler first to avoid a crash
+        PackageManager manager = getPackageManager();
+        List<ResolveInfo> resolveInfo = manager.queryIntentActivities(intent, 0);
+        if (resolveInfo.size() > 0) {
+            startActivity(intent);
+        }
+    }
+
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                Snackbar.make(homeScreenContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
+            }
+            if (photoFile != null) {
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            }
+        } else {
+            Snackbar.make(homeScreenContainer, R.string.no_camera_app_error_message, Snackbar.LENGTH_SHORT).show();
+        }
+    }
+
 }

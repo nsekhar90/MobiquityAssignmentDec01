@@ -95,7 +95,7 @@
             android:text="@string/cancel" />
 
         <Button
-            android:id="@+id/ok_button"
+            android:id="@+id/upload_button"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.5"

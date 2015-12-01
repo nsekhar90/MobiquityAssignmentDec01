@@ -31,7 +31,7 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 
-public class UploadImageActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class UploadImageActivity extends AppCompatActivity implements OnMapReadyCallback, View.OnClickListener {
 
     private String pathForPicassa;
     private String pathForUploading;
@@ -114,23 +114,10 @@ public class UploadImageActivity extends AppCompatActivity implements OnMapReady
             longitudeTextView.setText(String.format(getString(R.string.image_latitude_text), String.valueOf(longitude)));
         }
 
-        Button okButton = (Button) findViewById(R.id.ok_button);
+        Button okButton = (Button) findViewById(R.id.upload_button);
+        okButton.setOnClickListener(this);
         Button cancelButton = (Button) findViewById(R.id.cancel_button);
-
-        okButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onUploadClicked();
-            }
-        });
-
-        cancelButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
-
+        cancelButton.setOnClickListener(this);
     }
 
     @Override
@@ -143,16 +130,6 @@ public class UploadImageActivity extends AppCompatActivity implements OnMapReady
     protected void onPause() {
         super.onPause();
         bus.unregister(this);
-    }
-
-    public void onUploadClicked() {
-        uploadFile(pathForUploading);
-    }
-
-    private void uploadFile(String fileUri) {
-        toolbar.setTitle(R.string.uploading);
-        progressBar.setVisibility(View.VISIBLE);
-        new UploadFileTask(this, DropboxClient.files()).execute(fileUri, cityName);
     }
 
     @Subscribe
@@ -171,11 +148,6 @@ public class UploadImageActivity extends AppCompatActivity implements OnMapReady
         finish();
     }
 
-    private void resetToolbarTitle() {
-        toolbar.setTitle(R.string.app_name);
-        progressBar.setVisibility(View.GONE);
-    }
-
     @Override
     public void onMapReady(GoogleMap googleMap) {
         googleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
@@ -183,5 +155,32 @@ public class UploadImageActivity extends AppCompatActivity implements OnMapReady
                 .position(new LatLng(latitude, longitude))
                 .title(cityName));
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(latitude, longitude)));
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.upload_button:
+                onUploadClicked();
+                break;
+            case R.id.cancel_button:
+                finish();
+                break;
+        }
+    }
+
+    private void onUploadClicked() {
+        uploadFile(pathForUploading);
+    }
+
+    private void uploadFile(String fileUri) {
+        toolbar.setTitle(R.string.uploading);
+        progressBar.setVisibility(View.VISIBLE);
+        new UploadFileTask(this, DropboxClient.files()).execute(fileUri, cityName);
+    }
+
+    private void resetToolbarTitle() {
+        toolbar.setTitle(R.string.app_name);
+        progressBar.setVisibility(View.GONE);
     }
 }
