@@ -6,8 +6,8 @@ import android.util.Log;
 import com.dropbox.core.DbxException;
 import com.dropbox.core.v2.DbxFiles;
 import com.mobiquity.mydropbox.DropboxApp;
-import com.mobiquity.mydropbox.event.OnDataLoadedEvent;
-import com.mobiquity.mydropbox.event.OnDataLoadFailedEvent;
+import com.mobiquity.mydropbox.event.OnImageFilesLoadedEvent;
+import com.mobiquity.mydropbox.event.OnImageFilesLoadFailedEvent;
 import com.squareup.otto.Bus;
 
 /**
@@ -38,9 +38,9 @@ public class ListItemsInFolderTask extends AsyncTask<String, Void, DbxFiles.List
     protected void onPostExecute(DbxFiles.ListFolderResult result) {
         super.onPostExecute(result);
         if (result == null) {
-            bus.post(new OnDataLoadFailedEvent());
+            bus.post(new OnImageFilesLoadFailedEvent());
         } else {
-            bus.post(new OnDataLoadedEvent(result));
+            bus.post(new OnImageFilesLoadedEvent(result));
         }
     }
 

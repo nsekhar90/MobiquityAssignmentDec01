@@ -1,5 +1,6 @@
 package com.mobiquity.mydropbox.ui;
 
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -82,10 +84,17 @@ public class UploadImageActivity extends AppCompatActivity implements OnMapReady
         setSupportActionBar(toolbar);
 
         ImageView capturedImageView = (ImageView) findViewById(R.id.upload_picture_fragment_image);
+        FrameLayout mapContainer = (FrameLayout) findViewById(R.id.map);
 
-        MapFragment mapFragment = (MapFragment) getFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        if (latitude != 0 && longitude != 0) {
+            mapContainer.setVisibility(View.VISIBLE);
+            MapFragment mapFragment = MapFragment.newInstance();
+            FragmentTransaction fragmentTransaction =
+                    getFragmentManager().beginTransaction();
+            fragmentTransaction.add(R.id.map, mapFragment);
+            fragmentTransaction.commit();
+            mapFragment.getMapAsync(this);
+        }
 
         File file = new File(pathForPicassa);
         Picasso.with(this).setIndicatorsEnabled(true);

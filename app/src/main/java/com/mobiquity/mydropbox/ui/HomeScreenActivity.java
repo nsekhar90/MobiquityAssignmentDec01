@@ -22,7 +22,6 @@ import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
 import com.dropbox.core.v2.DbxFiles;
@@ -34,11 +33,11 @@ import com.mobiquity.mydropbox.DropboxApp;
 import com.mobiquity.mydropbox.DropboxClient;
 import com.mobiquity.mydropbox.PicassoClient;
 import com.mobiquity.mydropbox.R;
-import com.mobiquity.mydropbox.adapter.FilesAdapter;
-import com.mobiquity.mydropbox.event.OnDataLoadFailedEvent;
-import com.mobiquity.mydropbox.event.OnDataLoadedEvent;
+import com.mobiquity.mydropbox.adapter.ImageFilesAdapter;
 import com.mobiquity.mydropbox.event.OnDownloadFileFailedEvent;
 import com.mobiquity.mydropbox.event.OnDownloadFileSuccessEvent;
+import com.mobiquity.mydropbox.event.OnImageFilesLoadFailedEvent;
+import com.mobiquity.mydropbox.event.OnImageFilesLoadedEvent;
 import com.mobiquity.mydropbox.networking.task.DownloadFileTask;
 import com.mobiquity.mydropbox.networking.task.ListItemsInFolderTask;
 import com.mobiquity.mydropbox.ui.fragment.dialog.ImageOptionsDialogFragment;
@@ -59,17 +58,18 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     // Request code to use when launching the resolution activity
     private static final int REQUEST_RESOLVE_ERROR = 1001;
+    private static final String TAG_IMAGE_OPTIONS_DIALOG_FRAGMENT = "TAG_IMAGE_OPTIONS_DIALOG_FRAGMENT";
 
-    private String currentPhotoPath;
     private RecyclerView filesRecyclerView;
-    private FilesAdapter adapter;
+    private ImageFilesAdapter adapter;
     private CoordinatorLayout homeScreenContainer;
     private ViewSwitcher loginScreenSwitcher;
-    private Button loginButton;
-    private String photoPathForPicassa;
     private Bus bus;
     private ProgressBar progressBar;
     private Toolbar toolbar;
+
+    private String currentPhotoPath;
+    private String photoPathForPicassa;
 
     private GoogleApiClient googleApiClient;
     private boolean resolvingGooglePlayConnectionError = false;
@@ -94,7 +94,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         progressBar = (ProgressBar) findViewById(R.id.download_progress_bar);
 
         filesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        loginButton = (Button) findViewById(R.id.login_button);
+        Button loginButton = (Button) findViewById(R.id.login_button);
         loginButton.setOnClickListener(this);
 
         loginScreenSwitcher.setDisplayedChild(hasToken() ? 0 : 1);
@@ -125,7 +125,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     protected void loadData() {
         toolbar.setTitle(R.string.loading);
         progressBar.setVisibility(View.VISIBLE);
-        adapter = new FilesAdapter(PicassoClient.getPicasso(), new FileClickListener());
+        adapter = new ImageFilesAdapter(PicassoClient.getPicasso(), new FileClickListener());
         new ListItemsInFolderTask(DropboxClient.files()).execute("");
         filesRecyclerView.setAdapter(adapter);
     }
@@ -163,18 +163,15 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     }
 
     @Subscribe
-    public void onDataLoadedEvent(OnDataLoadedEvent event) {
+    public void onDataLoadedEvent(OnImageFilesLoadedEvent event) {
         resetToolbarTitle();
         adapter.setFiles(event.getResult().entries);
     }
 
     @Subscribe
-    public void onDataLoadFailedEvent(OnDataLoadFailedEvent event) {
+    public void onDataLoadFailedEvent(OnImageFilesLoadFailedEvent event) {
         resetToolbarTitle();
-        Toast.makeText(HomeScreenActivity.this,
-                "An error has occurred",
-                Toast.LENGTH_SHORT)
-                .show();
+        Snackbar.make(homeScreenContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
     }
 
     @Subscribe
@@ -182,7 +179,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         resetToolbarTitle();
         File file = event.getFile();
         ImageOptionsDialogFragment imageOptionsDialogFragment = ImageOptionsDialogFragment.newInstance(file);
-        imageOptionsDialogFragment.show(getFragmentManager(), "ImageOptionsDialogFragment_TAG");
+        imageOptionsDialogFragment.show(getFragmentManager(), TAG_IMAGE_OPTIONS_DIALOG_FRAGMENT);
     }
 
     @Subscribe
@@ -271,7 +268,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         viewFileInExternalApp(file);
     }
 
-    private class FileClickListener implements FilesAdapter.FilesAdapterActionClickListener {
+    private class FileClickListener implements ImageFilesAdapter.FilesAdapterActionClickListener {
 
         @Override
         public void onFileClicked(DbxFiles.FileMetadata file) {

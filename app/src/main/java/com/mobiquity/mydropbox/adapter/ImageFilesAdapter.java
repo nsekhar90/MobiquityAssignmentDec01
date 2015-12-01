@@ -16,7 +16,7 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
-public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.MetadataViewHolder> {
+public class ImageFilesAdapter extends RecyclerView.Adapter<ImageFilesAdapter.MetadataViewHolder> {
 
     private List<DbxFiles.Metadata> filesList;
     private final Picasso picasso;
@@ -27,7 +27,7 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.MetadataView
         notifyDataSetChanged();
     }
 
-    public FilesAdapter(Picasso picasso, FilesAdapterActionClickListener listener) {
+    public ImageFilesAdapter(Picasso picasso, FilesAdapterActionClickListener listener) {
         this.picasso = picasso;
         this.listener = listener;
     }

@@ -2,11 +2,11 @@ package com.mobiquity.mydropbox.event;
 
 import com.dropbox.core.v2.DbxFiles;
 
-public class OnDataLoadedEvent {
+public class OnImageFilesLoadedEvent {
 
     private DbxFiles.ListFolderResult result;
 
-    public OnDataLoadedEvent(DbxFiles.ListFolderResult result) {
+    public OnImageFilesLoadedEvent(DbxFiles.ListFolderResult result) {
         this.result = result;
     }
 
