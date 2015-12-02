@@ -32,53 +32,66 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <TextView
-        android:id="@+id/image_latitude_textview"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/app_bar_layout"
-        android:layout_marginLeft="15dp"
-        android:layout_marginTop="5dp"
-        android:padding="3dp"
-        android:textStyle="bold"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/image_longitude_textview"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/image_latitude_textview"
-        android:layout_marginLeft="15dp"
-        android:padding="3dp"
-        android:text="longitude"
-        android:textStyle="bold"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/image_city_textview"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/image_longitude_textview"
-        android:layout_marginLeft="15dp"
-        android:padding="3dp"
-        android:text="Charlotte"
-        android:textStyle="bold"
-        android:visibility="gone" />
-
-    <FrameLayout
-        android:id="@+id/map"
+    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:layout_below="@id/image_city_textview"
-        android:visibility="gone" />
+        android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/upload_picture_fragment_image"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:layout_below="@id/map"
-        android:layout_gravity="center"
-        android:layout_margin="25dp" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_marginTop="?attr/actionBarSize"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/image_latitude_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="5dp"
+                android:padding="3dp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/image_longitude_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/image_latitude_textview"
+                android:layout_marginLeft="15dp"
+                android:padding="3dp"
+                android:text="longitude"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/image_city_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/image_longitude_textview"
+                android:layout_marginLeft="15dp"
+                android:padding="3dp"
+                android:text="Charlotte"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <FrameLayout
+                android:id="@+id/map"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:layout_below="@id/image_city_textview"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/upload_picture_fragment_image"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_below="@id/map"
+                android:layout_gravity="center"
+                android:layout_margin="25dp" />
+
+        </RelativeLayout>
+
+    </ScrollView>
 
     <LinearLayout
         android:layout_width="match_parent"

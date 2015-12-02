@@ -61,6 +61,8 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     // Request code to use when launching the resolution activity
     private static final int REQUEST_RESOLVE_ERROR = 1001;
     private static final String TAG_IMAGE_OPTIONS_DIALOG_FRAGMENT = "TAG_IMAGE_OPTIONS_DIALOG_FRAGMENT";
+    private static final String KEY_PHOTO_PATH_FOR_PICASSA = "KEY_PHOTO_PATH_FOR_PICASSA";
+    private static final String KEY_PHOTO_PATH_FOR_UPLOADING = "KEY_PHOTO_PATH_FOR_UPLOADING";
 
     private RecyclerView filesRecyclerView;
     private ImageFilesAdapter adapter;
@@ -70,8 +72,8 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     private ProgressBar progressBar;
     private Toolbar toolbar;
 
-    private String currentPhotoPath;
-    private String photoPathForPicassa;
+    private String currentPhotoPathForUploading;
+    private String currentPhotoPathForPicassa;
 
     private GoogleApiClient googleApiClient;
     private boolean resolvingGooglePlayConnectionError = false;
@@ -141,6 +143,22 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(KEY_PHOTO_PATH_FOR_PICASSA, currentPhotoPathForPicassa);
+        outState.putString(KEY_PHOTO_PATH_FOR_UPLOADING, currentPhotoPathForUploading);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null) {
+            currentPhotoPathForPicassa = savedInstanceState.getString(KEY_PHOTO_PATH_FOR_PICASSA);
+            currentPhotoPathForUploading = savedInstanceState.getString(KEY_PHOTO_PATH_FOR_UPLOADING);
+        }
+    }
+
+    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.fab:
@@ -160,8 +178,8 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
             if (data != null) {
                 uri = data.getData();
             }
-            if (uri == null && currentPhotoPath != null) {
-                UploadImageActivity.start(this, currentPhotoPath, photoPathForPicassa, lastKnownLatitude, lastKnownLongitude, lastKnownCity);
+            if (uri == null && currentPhotoPathForUploading != null) {
+                UploadImageActivity.start(this, currentPhotoPathForUploading, currentPhotoPathForPicassa, lastKnownLatitude, lastKnownLongitude, lastKnownCity);
             }
         }
     }
@@ -304,8 +322,8 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
                 storageDir
         );
 
-        currentPhotoPath = "file:" + image.getAbsolutePath();
-        photoPathForPicassa = image.getAbsolutePath();
+        currentPhotoPathForUploading = "file:" + image.getAbsolutePath();
+        currentPhotoPathForPicassa = image.getAbsolutePath();
         return image;
     }
 
