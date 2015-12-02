@@ -22,7 +22,7 @@ public class UploadFileTask extends AsyncTask<String, Void, DbxFiles.FileMetadat
 
     private final Context context;
     private final DbxFiles files;
-    private Bus bus;
+    private final Bus bus;
     private Exception exception;
 
     public UploadFileTask(Context context, DbxFiles filesClient) {

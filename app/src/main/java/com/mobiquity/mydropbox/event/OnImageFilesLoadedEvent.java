@@ -4,7 +4,7 @@ import com.dropbox.core.v2.DbxFiles;
 
 public class OnImageFilesLoadedEvent {
 
-    private DbxFiles.ListFolderResult result;
+    private final DbxFiles.ListFolderResult result;
 
     public OnImageFilesLoadedEvent(DbxFiles.ListFolderResult result) {
         this.result = result;

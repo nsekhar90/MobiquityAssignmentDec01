@@ -16,7 +16,7 @@ import com.squareup.otto.Bus;
 public class ListItemsInFolderTask extends AsyncTask<String, Void, DbxFiles.ListFolderResult> {
 
     private final DbxFiles dbxFiles;
-    private Bus bus;
+    private final Bus bus;
 
     public ListItemsInFolderTask(DbxFiles filesClient) {
         dbxFiles = filesClient;

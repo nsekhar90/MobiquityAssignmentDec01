@@ -21,7 +21,7 @@ public class ImageFilesAdapter extends RecyclerView.Adapter<ImageFilesAdapter.Me
     private List<DbxFiles.Metadata> filesList;
     private final Picasso picasso;
     private final FilesAdapterActionClickListener listener;
-    private EmptyAdapterListener emptyAdapterListener;
+    private final EmptyAdapterListener emptyAdapterListener;
 
     public void setFiles(List<DbxFiles.Metadata> files) {
         filesList = files;

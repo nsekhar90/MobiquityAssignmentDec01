@@ -24,7 +24,7 @@ public class DownloadFileTask extends AsyncTask<Object, Void, ReturnTypeForDownl
 
     private final Context context;
     private final DbxFiles dbxFiles;
-    private Bus bus;
+    private final Bus bus;
 
     public DownloadFileTask(Context context, DbxFiles filesClient) {
         this.context = context;

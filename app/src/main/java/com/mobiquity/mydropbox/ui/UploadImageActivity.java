@@ -13,7 +13,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -41,7 +40,6 @@ public class UploadImageActivity extends AppCompatActivity implements OnMapReady
     private String cityName;
 
     private Bus bus;
-    private Toolbar toolbar;
 
     private static final String KEY_PATH_FOR_PICASSO = "KEY_PATH_FOR_PICASSO";
     private static final String KEY_PATH_FOR_UPLOADING = "KEY_PATH_FOR_UPLOADING";
@@ -74,8 +72,7 @@ public class UploadImageActivity extends AppCompatActivity implements OnMapReady
             pathForUploading = bundle.getString(KEY_PATH_FOR_UPLOADING);
         }
 
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         ImageView capturedImageView = (ImageView) findViewById(R.id.upload_picture_fragment_image);

@@ -108,7 +108,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         Button loginButton = (Button) findViewById(R.id.login_button);
         loginButton.setOnClickListener(this);
 
-        bottomSheetLayout = (BottomSheetLayout) findViewById(R.id.bottomsheet);
+        bottomSheetLayout = (BottomSheetLayout) findViewById(R.id.bottom_sheet);
 
         loginScreenSwitcher.setDisplayedChild(hasToken() ? 0 : 1);
 
@@ -283,7 +283,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
 
     }
 
-    public void onShareClicked(File file) {
+    private void onShareClicked(File file) {
         if (file != null) {
             Intent shareIntent = new Intent();
             shareIntent.setAction(Intent.ACTION_SEND);

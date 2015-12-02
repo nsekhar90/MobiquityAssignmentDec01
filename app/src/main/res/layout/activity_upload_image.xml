@@ -40,7 +40,7 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_marginTop="?attr/actionBarSize"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content">
 
             <TextView
                 android:id="@+id/image_latitude_textview"
@@ -59,7 +59,6 @@
                 android:layout_below="@id/image_latitude_textview"
                 android:layout_marginLeft="15dp"
                 android:padding="3dp"
-                android:text="longitude"
                 android:textStyle="bold"
                 android:visibility="gone" />
 
@@ -70,7 +69,6 @@
                 android:layout_below="@id/image_longitude_textview"
                 android:layout_marginLeft="15dp"
                 android:padding="3dp"
-                android:text="Charlotte"
                 android:textStyle="bold"
                 android:visibility="gone" />
 
@@ -106,6 +104,11 @@
             android:layout_weight="0.5"
             android:background="@drawable/white_button_selector"
             android:text="@string/cancel" />
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="50dp"
+            android:background="@color/light_grey"/>
 
         <Button
             android:id="@+id/upload_button"

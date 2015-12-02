@@ -4,7 +4,7 @@ import com.mobiquity.mydropbox.networking.task.model.ReturnTypeForDownloadTask;
 
 public class OnDownloadFileSuccessEvent {
 
-    private ReturnTypeForDownloadTask downloadedFileContainer;
+    private final ReturnTypeForDownloadTask downloadedFileContainer;
 
     public OnDownloadFileSuccessEvent(ReturnTypeForDownloadTask result) {
         downloadedFileContainer = result;
