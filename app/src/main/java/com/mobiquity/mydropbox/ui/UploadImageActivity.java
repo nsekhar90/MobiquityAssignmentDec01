@@ -1,18 +1,19 @@
 package com.mobiquity.mydropbox.ui;
 
 import android.app.FragmentTransaction;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -24,18 +25,16 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.mobiquity.mydropbox.DropboxApp;
 import com.mobiquity.mydropbox.DropboxClient;
 import com.mobiquity.mydropbox.R;
-import com.mobiquity.mydropbox.event.OnUploadFailedEvent;
-import com.mobiquity.mydropbox.event.OnUploadSuccessfulEvent;
 import com.mobiquity.mydropbox.networking.task.UploadFileTask;
+import com.mobiquity.mydropbox.notification.INotifier;
 import com.squareup.otto.Bus;
-import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
 
 public class UploadImageActivity extends AppCompatActivity implements OnMapReadyCallback, View.OnClickListener {
 
-    private String pathForPicassa;
+    private String pathForPicasso;
     private String pathForUploading;
     private double latitude;
     private double longitude;
@@ -43,19 +42,17 @@ public class UploadImageActivity extends AppCompatActivity implements OnMapReady
 
     private Bus bus;
     private Toolbar toolbar;
-    private ProgressBar progressBar;
-    private RelativeLayout uploadImageContainer;
 
-    private static final String KEY_PATH_FOR_PICASSA = "KEY_PATH_PICASSA";
+    private static final String KEY_PATH_FOR_PICASSO = "KEY_PATH_FOR_PICASSO";
     private static final String KEY_PATH_FOR_UPLOADING = "KEY_PATH_FOR_UPLOADING";
     private static final String KEY_LATITUDE = "KEY_LATITUDE";
     private static final String KEY_LONGITUDE = "KEY_LONGITUDE";
     private static final String KEY_CITY = "KEY_CITY";
 
 
-    public static void start(Context context, String pathForUploading, String pathForPicassa, double latitude, double longitude, String city) {
+    public static void start(Context context, String pathForUploading, String pathForPicasso, double latitude, double longitude, String city) {
         Intent intent = new Intent(context, UploadImageActivity.class);
-        intent.putExtra(KEY_PATH_FOR_PICASSA, pathForPicassa);
+        intent.putExtra(KEY_PATH_FOR_PICASSO, pathForPicasso);
         intent.putExtra(KEY_LATITUDE, latitude);
         intent.putExtra(KEY_LONGITUDE, longitude);
         intent.putExtra(KEY_CITY, city);
@@ -70,7 +67,7 @@ public class UploadImageActivity extends AppCompatActivity implements OnMapReady
         bus = DropboxApp.getBus();
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
-            pathForPicassa = bundle.getString(KEY_PATH_FOR_PICASSA);
+            pathForPicasso = bundle.getString(KEY_PATH_FOR_PICASSO);
             latitude = bundle.getDouble(KEY_LATITUDE);
             longitude = bundle.getDouble(KEY_LONGITUDE);
             cityName = bundle.getString(KEY_CITY);
@@ -78,8 +75,6 @@ public class UploadImageActivity extends AppCompatActivity implements OnMapReady
         }
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        progressBar = (ProgressBar) findViewById(R.id.download_progress_bar);
-        uploadImageContainer = (RelativeLayout) findViewById(R.id.upload_image_container);
 
         setSupportActionBar(toolbar);
 
@@ -96,7 +91,7 @@ public class UploadImageActivity extends AppCompatActivity implements OnMapReady
             mapFragment.getMapAsync(this);
         }
 
-        File file = new File(pathForPicassa);
+        File file = new File(pathForPicasso);
         Picasso.with(this).setIndicatorsEnabled(true);
         Picasso.with(this)
                 .load(file)
@@ -141,20 +136,6 @@ public class UploadImageActivity extends AppCompatActivity implements OnMapReady
         bus.unregister(this);
     }
 
-    @Subscribe
-    public void onUploadCompleted(OnUploadSuccessfulEvent result) {
-        resetToolbarTitle();
-        Snackbar.make(uploadImageContainer, R.string.upload_successful, Snackbar.LENGTH_SHORT).show();
-        finish();
-    }
-
-    @Subscribe
-    public void onUploadFailedEvent(OnUploadFailedEvent event) {
-        resetToolbarTitle();
-        Snackbar.make(uploadImageContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
-        finish();
-    }
-
     @Override
     public void onMapReady(GoogleMap googleMap) {
         googleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
@@ -177,17 +158,28 @@ public class UploadImageActivity extends AppCompatActivity implements OnMapReady
     }
 
     private void onUploadClicked() {
+        showNotification();
         uploadFile(pathForUploading);
     }
 
     private void uploadFile(String fileUri) {
-        toolbar.setTitle(R.string.uploading);
-        progressBar.setVisibility(View.VISIBLE);
+        finish();
         new UploadFileTask(this, DropboxClient.files()).execute(fileUri, cityName);
     }
 
-    private void resetToolbarTitle() {
-        toolbar.setTitle(R.string.app_name);
-        progressBar.setVisibility(View.GONE);
+
+    private void showNotification() {
+        Intent resultIntent = new Intent(this, HomeScreenActivity.class);
+        PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        android.support.v4.app.NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ic_insert_drive_file)
+                        .setContentTitle(getString(R.string.app_name))
+                        .setProgress(0, 0, true)
+                        .setContentIntent(resultPendingIntent)
+                        .setContentText(getString(R.string.upload_in_progress));
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.notify(INotifier.UPLOAD_IMAGE_NOTIFICATION_ID, mBuilder.build());
     }
 }

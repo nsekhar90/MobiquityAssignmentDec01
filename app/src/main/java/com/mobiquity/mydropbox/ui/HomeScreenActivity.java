@@ -1,5 +1,6 @@
 package com.mobiquity.mydropbox.ui;
 
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -42,8 +43,11 @@ import com.mobiquity.mydropbox.event.OnDownloadFileFailedEvent;
 import com.mobiquity.mydropbox.event.OnDownloadFileSuccessEvent;
 import com.mobiquity.mydropbox.event.OnImageFilesLoadFailedEvent;
 import com.mobiquity.mydropbox.event.OnImageFilesLoadedEvent;
+import com.mobiquity.mydropbox.event.OnUploadFailedEvent;
+import com.mobiquity.mydropbox.event.OnUploadSuccessfulEvent;
 import com.mobiquity.mydropbox.networking.task.DownloadFileTask;
 import com.mobiquity.mydropbox.networking.task.ListItemsInFolderTask;
+import com.mobiquity.mydropbox.notification.INotifier;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
@@ -61,8 +65,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     // Request code to use when launching the resolution activity
     private static final int REQUEST_RESOLVE_ERROR = 1001;
-    private static final String TAG_IMAGE_OPTIONS_DIALOG_FRAGMENT = "TAG_IMAGE_OPTIONS_DIALOG_FRAGMENT";
-    private static final String KEY_PHOTO_PATH_FOR_PICASSA = "KEY_PHOTO_PATH_FOR_PICASSA";
+    private static final String KEY_PHOTO_PATH_FOR_PICASSO = "KEY_PHOTO_PATH_FOR_PICASSO";
     private static final String KEY_PHOTO_PATH_FOR_UPLOADING = "KEY_PHOTO_PATH_FOR_UPLOADING";
 
     private RecyclerView filesRecyclerView;
@@ -74,7 +77,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     private Toolbar toolbar;
 
     private String currentPhotoPathForUploading;
-    private String currentPhotoPathForPicassa;
+    private String currentPhotoPathForPicasso;
 
     private GoogleApiClient googleApiClient;
     private boolean resolvingGooglePlayConnectionError = false;
@@ -149,7 +152,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString(KEY_PHOTO_PATH_FOR_PICASSA, currentPhotoPathForPicassa);
+        outState.putString(KEY_PHOTO_PATH_FOR_PICASSO, currentPhotoPathForPicasso);
         outState.putString(KEY_PHOTO_PATH_FOR_UPLOADING, currentPhotoPathForUploading);
     }
 
@@ -157,7 +160,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         if (savedInstanceState != null) {
-            currentPhotoPathForPicassa = savedInstanceState.getString(KEY_PHOTO_PATH_FOR_PICASSA);
+            currentPhotoPathForPicasso = savedInstanceState.getString(KEY_PHOTO_PATH_FOR_PICASSO);
             currentPhotoPathForUploading = savedInstanceState.getString(KEY_PHOTO_PATH_FOR_UPLOADING);
         }
     }
@@ -183,7 +186,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
                 uri = data.getData();
             }
             if (uri == null && currentPhotoPathForUploading != null) {
-                UploadImageActivity.start(this, currentPhotoPathForUploading, currentPhotoPathForPicassa, lastKnownLatitude, lastKnownLongitude, lastKnownCity);
+                UploadImageActivity.start(this, currentPhotoPathForUploading, currentPhotoPathForPicasso, lastKnownLatitude, lastKnownLongitude, lastKnownCity);
             }
         }
     }
@@ -214,6 +217,20 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     @Subscribe
     public void onDownloadFileFailedEvent(OnDownloadFileFailedEvent event) {
         resetToolbarTitle();
+        Snackbar.make(homeScreenContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
+    }
+
+    @Subscribe
+    public void onUploadCompleted(OnUploadSuccessfulEvent result) {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.cancel(INotifier.UPLOAD_IMAGE_NOTIFICATION_ID);
+        Snackbar.make(homeScreenContainer, R.string.upload_successful, Snackbar.LENGTH_SHORT).show();
+    }
+
+    @Subscribe
+    public void onUploadFailedEvent(OnUploadFailedEvent event) {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.cancel(INotifier.UPLOAD_IMAGE_NOTIFICATION_ID);
         Snackbar.make(homeScreenContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
     }
 
@@ -323,7 +340,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         );
 
         currentPhotoPathForUploading = "file:" + image.getAbsolutePath();
-        currentPhotoPathForPicassa = image.getAbsolutePath();
+        currentPhotoPathForPicasso = image.getAbsolutePath();
         return image;
     }
 

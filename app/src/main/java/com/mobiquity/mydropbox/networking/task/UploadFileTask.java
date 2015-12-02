@@ -23,6 +23,7 @@ public class UploadFileTask extends AsyncTask<String, Void, DbxFiles.FileMetadat
     private final Context context;
     private final DbxFiles files;
     private Bus bus;
+    private Exception exception;
 
     public UploadFileTask(Context context, DbxFiles filesClient) {
         this.context = context;
@@ -54,6 +55,7 @@ public class UploadFileTask extends AsyncTask<String, Void, DbxFiles.FileMetadat
                 }
             } catch (DbxException | IOException e) {
                 e.printStackTrace();
+                this.exception = e;
             }
         }
 
@@ -64,10 +66,10 @@ public class UploadFileTask extends AsyncTask<String, Void, DbxFiles.FileMetadat
     @Override
     protected void onPostExecute(DbxFiles.FileMetadata result) {
         super.onPostExecute(result);
-        if (result == null) {
+        if (exception != null) {
             bus.post(new OnUploadFailedEvent());
         } else {
-            bus.post(new OnUploadSuccessfulEvent(result));
+            bus.post(new OnUploadSuccessfulEvent());
         }
     }
 }
