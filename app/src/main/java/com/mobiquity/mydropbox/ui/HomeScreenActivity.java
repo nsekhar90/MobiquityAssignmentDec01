@@ -110,6 +110,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         bottomSheetLayout = (BottomSheetLayout) findViewById(R.id.bottom_sheet);
         loadingViewSwitcher = (ViewSwitcher) findViewById(R.id.loading_view_switcher);
 
+        loadingViewSwitcher.setDisplayedChild(hasToken() ? 0 : 1);
         loginScreenSwitcher.setDisplayedChild(hasToken() ? 0 : 1);
 
         googleApiClient = new GoogleApiClient.Builder(this)
@@ -132,14 +133,6 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         super.onPause();
         bus.unregister(this);
         googleApiClient.disconnect();
-    }
-
-    @Override
-    protected void loadData() {
-        loadingViewSwitcher.setDisplayedChild(0);
-        adapter = new ImageFilesAdapter(PicassoClient.getPicasso(), this, this);
-        new ListItemsInFolderTask(DropboxClient.files()).execute("");
-        filesRecyclerView.setAdapter(adapter);
     }
 
     @Override
@@ -188,6 +181,14 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
                 UploadImageActivity.start(this, currentPhotoPathForUploading, currentPhotoPathForPicasso, lastKnownLatitude, lastKnownLongitude, lastKnownCity);
             }
         }
+    }
+
+    @Override
+    protected void loadData() {
+        loadingViewSwitcher.setDisplayedChild(0);
+        adapter = new ImageFilesAdapter(PicassoClient.getPicasso(), this, this);
+        new ListItemsInFolderTask(DropboxClient.files()).execute("");
+        filesRecyclerView.setAdapter(adapter);
     }
 
     @Subscribe
