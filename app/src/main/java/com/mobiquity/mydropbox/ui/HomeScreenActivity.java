@@ -24,7 +24,6 @@ import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.ViewSwitcher;
 
 import com.dropbox.core.v2.DbxFiles;
@@ -65,6 +64,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     // Request code to use when launching the resolution activity
     private static final int REQUEST_RESOLVE_ERROR = 1001;
+
     private static final String KEY_PHOTO_PATH_FOR_PICASSO = "KEY_PHOTO_PATH_FOR_PICASSO";
     private static final String KEY_PHOTO_PATH_FOR_UPLOADING = "KEY_PHOTO_PATH_FOR_UPLOADING";
 
@@ -72,8 +72,8 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     private ImageFilesAdapter adapter;
     private CoordinatorLayout homeScreenContainer;
     private ViewSwitcher loginScreenSwitcher;
+    private ViewSwitcher loadingViewSwitcher;
     private Bus bus;
-    private ProgressBar progressBar;
     private Toolbar toolbar;
 
     private String currentPhotoPathForUploading;
@@ -101,7 +101,6 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         filesRecyclerView = (RecyclerView) findViewById(R.id.images_recycler_view);
         homeScreenContainer = (CoordinatorLayout) findViewById(R.id.home_screen_container);
         loginScreenSwitcher = (ViewSwitcher) findViewById(R.id.login_view_switcher);
-        progressBar = (ProgressBar) findViewById(R.id.download_progress_bar);
         emptyViewForRecyclerView = (LinearLayout) findViewById(R.id.empty_view_for_recycler_view);
 
         filesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -109,6 +108,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         loginButton.setOnClickListener(this);
 
         bottomSheetLayout = (BottomSheetLayout) findViewById(R.id.bottom_sheet);
+        loadingViewSwitcher = (ViewSwitcher) findViewById(R.id.loading_view_switcher);
 
         loginScreenSwitcher.setDisplayedChild(hasToken() ? 0 : 1);
 
@@ -136,8 +136,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
 
     @Override
     protected void loadData() {
-        toolbar.setTitle(R.string.loading);
-        progressBar.setVisibility(View.VISIBLE);
+        loadingViewSwitcher.setDisplayedChild(0);
         adapter = new ImageFilesAdapter(PicassoClient.getPicasso(), this, this);
         new ListItemsInFolderTask(DropboxClient.files()).execute("");
         filesRecyclerView.setAdapter(adapter);
@@ -193,7 +192,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
 
     @Subscribe
     public void onDataLoadedEvent(OnImageFilesLoadedEvent event) {
-        resetToolbarTitle();
+        switchToRecyclerView();
         //update only if size of list changes
         if (adapter.getItemCount() != event.getResult().entries.size()) {
             adapter.setFiles(event.getResult().entries);
@@ -202,13 +201,13 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
 
     @Subscribe
     public void onDataLoadFailedEvent(OnImageFilesLoadFailedEvent event) {
-        resetToolbarTitle();
+        switchToRecyclerView();
         Snackbar.make(homeScreenContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
     }
 
     @Subscribe
     public void onDownloadFileSuccessEvent(OnDownloadFileSuccessEvent event) {
-        resetToolbarTitle();
+        switchToRecyclerView();
         File file = event.getFileContainer().getFile();
         if (event.getFileContainer().isShare()) {
             onShareClicked(file);
@@ -219,7 +218,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
 
     @Subscribe
     public void onDownloadFileFailedEvent(OnDownloadFileFailedEvent event) {
-        resetToolbarTitle();
+        switchToRecyclerView();
         Snackbar.make(homeScreenContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
     }
 
@@ -227,6 +226,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     public void onUploadCompleted(OnUploadSuccessfulEvent result) {
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         notificationManager.cancel(INotifier.UPLOAD_IMAGE_NOTIFICATION_ID);
+        loadData();
         Snackbar.make(homeScreenContainer, R.string.upload_successful, Snackbar.LENGTH_SHORT).show();
     }
 
@@ -321,14 +321,14 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         showMenuSheet(file);
     }
 
-    private void resetToolbarTitle() {
+    private void switchToRecyclerView() {
         toolbar.setTitle(R.string.app_name);
-        progressBar.setVisibility(View.GONE);
+        loadingViewSwitcher.setDisplayedChild(1);
     }
 
     private void downloadFile(DbxFiles.FileMetadata file, boolean isShareSelected) {
         toolbar.setTitle(R.string.downloading);
-        progressBar.setVisibility(View.VISIBLE);
+        loadingViewSwitcher.setDisplayedChild(1);
         new DownloadFileTask(HomeScreenActivity.this, DropboxClient.files()).execute(file, isShareSelected);
     }
 

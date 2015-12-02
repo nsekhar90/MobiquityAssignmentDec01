@@ -29,5 +29,6 @@
     <string name="no_files_in_folder_text">Look\'s like you don\'t have any images uploaded yet. Start Uploading Images!</string>
     <string name="upload_in_progress">Upload in progress</string>
     <string name="request_login_text">Please Login to use the app</string>
+    <string name="loading_text">Loading…</string>
 
 </resources>
