@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:gravity="center"
+        android:padding="5dp"
+        android:text="@string/image_options_dialog_title"
+        android:textColor="@color/black"
+        android:clickable="false"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/image_view"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/white_button_selector"
+        android:gravity="center"
+        android:padding="5dp"
+        android:text="@string/view" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="#d3d3d3" />
+
+    <TextView
+        android:id="@+id/image_share"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/white_button_selector"
+        android:gravity="center"
+        android:padding="5dp"
+        android:text="@string/share_with_facebook" />
+
+
+</LinearLayout>

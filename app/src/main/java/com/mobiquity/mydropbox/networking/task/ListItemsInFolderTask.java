@@ -1,23 +1,24 @@
 package com.mobiquity.mydropbox.networking.task;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.dropbox.core.DbxException;
 import com.dropbox.core.v2.DbxFiles;
 import com.mobiquity.mydropbox.DropboxApp;
-import com.mobiquity.mydropbox.event.OnDataLoadedEvent;
-import com.mobiquity.mydropbox.event.OnDataLoadFailedEvent;
+import com.mobiquity.mydropbox.event.OnImageFilesLoadedEvent;
+import com.mobiquity.mydropbox.event.OnImageFilesLoadFailedEvent;
 import com.squareup.otto.Bus;
 
 /**
  * Async task to list items in a folder
  */
-public class ListFolderTask extends AsyncTask<String, Void, DbxFiles.ListFolderResult> {
+public class ListItemsInFolderTask extends AsyncTask<String, Void, DbxFiles.ListFolderResult> {
 
     private final DbxFiles dbxFiles;
     private Bus bus;
 
-    public ListFolderTask(DbxFiles filesClient) {
+    public ListItemsInFolderTask(DbxFiles filesClient) {
         dbxFiles = filesClient;
         bus = DropboxApp.getBus();
     }
@@ -27,7 +28,7 @@ public class ListFolderTask extends AsyncTask<String, Void, DbxFiles.ListFolderR
         try {
             return dbxFiles.listFolder(params[0]);
         } catch (DbxException e) {
-            bus.post(new OnDataLoadFailedEvent());
+            Log.e("ListItemsInFolderTask", e.getMessage());
         }
 
         return null;
@@ -36,7 +37,11 @@ public class ListFolderTask extends AsyncTask<String, Void, DbxFiles.ListFolderR
     @Override
     protected void onPostExecute(DbxFiles.ListFolderResult result) {
         super.onPostExecute(result);
-        bus.post(new OnDataLoadedEvent(result));
+        if (result == null) {
+            bus.post(new OnImageFilesLoadFailedEvent());
+        } else {
+            bus.post(new OnImageFilesLoadedEvent(result));
+        }
     }
 
 }

@@ -1,9 +1,12 @@
 package com.mobiquity.mydropbox.ui;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -14,32 +17,30 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
 import com.dropbox.core.v2.DbxFiles;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 import com.mobiquity.mydropbox.Auth;
 import com.mobiquity.mydropbox.DropboxApp;
 import com.mobiquity.mydropbox.DropboxClient;
 import com.mobiquity.mydropbox.PicassoClient;
 import com.mobiquity.mydropbox.R;
-import com.mobiquity.mydropbox.adapter.FilesAdapter;
-import com.mobiquity.mydropbox.event.OnDataLoadFailedEvent;
-import com.mobiquity.mydropbox.event.OnDataLoadedEvent;
+import com.mobiquity.mydropbox.adapter.ImageFilesAdapter;
 import com.mobiquity.mydropbox.event.OnDownloadFileFailedEvent;
 import com.mobiquity.mydropbox.event.OnDownloadFileSuccessEvent;
-import com.mobiquity.mydropbox.event.OnUploadFailedEvent;
-import com.mobiquity.mydropbox.event.OnUploadSuccessfulEvent;
+import com.mobiquity.mydropbox.event.OnImageFilesLoadFailedEvent;
+import com.mobiquity.mydropbox.event.OnImageFilesLoadedEvent;
 import com.mobiquity.mydropbox.networking.task.DownloadFileTask;
-import com.mobiquity.mydropbox.networking.task.ListFolderTask;
-import com.mobiquity.mydropbox.networking.task.UploadFileTask;
-import com.mobiquity.mydropbox.ui.fragment.dialog.UploadPictureDialogFragment;
+import com.mobiquity.mydropbox.networking.task.ListItemsInFolderTask;
+import com.mobiquity.mydropbox.ui.fragment.dialog.ImageOptionsDialogFragment;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
@@ -48,28 +49,40 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class HomeScreenActivity extends DropboxActivity implements View.OnClickListener,
-        UploadPictureDialogFragment.UploadPictureDialogFragmentDialogActionListener {
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+        ImageOptionsDialogFragment.ImageOptionsDialogFragmentActionListener {
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
+    // Request code to use when launching the resolution activity
+    private static final int REQUEST_RESOLVE_ERROR = 1001;
+    private static final String TAG_IMAGE_OPTIONS_DIALOG_FRAGMENT = "TAG_IMAGE_OPTIONS_DIALOG_FRAGMENT";
 
-    private String currentPhotoPath;
     private RecyclerView filesRecyclerView;
-    private FilesAdapter adapter;
+    private ImageFilesAdapter adapter;
     private CoordinatorLayout homeScreenContainer;
     private ViewSwitcher loginScreenSwitcher;
-    private Button loginButton;
-    private String photoPathForPicassa;
     private Bus bus;
     private ProgressBar progressBar;
+    private Toolbar toolbar;
+
+    private String currentPhotoPath;
+    private String photoPathForPicassa;
+
+    private GoogleApiClient googleApiClient;
+    private boolean resolvingGooglePlayConnectionError = false;
+    private double lastKnownLatitude = 0;
+    private double lastKnownLongitude = 0;
+    private String lastKnownCity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         bus = DropboxApp.getBus();
         setContentView(R.layout.activity_home_screen);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         FloatingActionButton takePictureButton = (FloatingActionButton) findViewById(R.id.fab);
@@ -81,10 +94,16 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         progressBar = (ProgressBar) findViewById(R.id.download_progress_bar);
 
         filesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        loginButton = (Button) findViewById(R.id.login_button);
+        Button loginButton = (Button) findViewById(R.id.login_button);
         loginButton.setOnClickListener(this);
 
         loginScreenSwitcher.setDisplayedChild(hasToken() ? 0 : 1);
+
+        googleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
     }
 
     @Override
@@ -92,19 +111,22 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         super.onResume();
         bus.register(this);
         loginScreenSwitcher.setDisplayedChild(hasToken() ? 0 : 1);
+        googleApiClient.connect();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         bus.unregister(this);
+        googleApiClient.disconnect();
     }
 
     @Override
     protected void loadData() {
+        toolbar.setTitle(R.string.loading);
         progressBar.setVisibility(View.VISIBLE);
-        adapter = new FilesAdapter(PicassoClient.getPicasso(), new FileClickListener());
-        new ListFolderTask(DropboxClient.files()).execute("");
+        adapter = new ImageFilesAdapter(PicassoClient.getPicasso(), new FileClickListener());
+        new ListItemsInFolderTask(DropboxClient.files()).execute("");
         filesRecyclerView.setAdapter(adapter);
     }
 
@@ -126,10 +148,160 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Uri uri = null;
+            if (data != null) {
+                uri = data.getData();
+            }
+            if (uri == null && currentPhotoPath != null) {
+                UploadImageActivity.start(this, currentPhotoPath, photoPathForPicassa, lastKnownLatitude, lastKnownLongitude, lastKnownCity);
+            }
+        }
+    }
+
+    @Subscribe
+    public void onDataLoadedEvent(OnImageFilesLoadedEvent event) {
+        resetToolbarTitle();
+        adapter.setFiles(event.getResult().entries);
+    }
+
+    @Subscribe
+    public void onDataLoadFailedEvent(OnImageFilesLoadFailedEvent event) {
+        resetToolbarTitle();
+        Snackbar.make(homeScreenContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
+    }
+
+    @Subscribe
+    public void onDownloadFileSuccessEvent(OnDownloadFileSuccessEvent event) {
+        resetToolbarTitle();
+        File file = event.getFile();
+        ImageOptionsDialogFragment imageOptionsDialogFragment = ImageOptionsDialogFragment.newInstance(file);
+        imageOptionsDialogFragment.show(getFragmentManager(), TAG_IMAGE_OPTIONS_DIALOG_FRAGMENT);
+    }
+
+    @Subscribe
+    public void onDownloadFileFailedEvent(OnDownloadFileFailedEvent event) {
+        resetToolbarTitle();
+        Snackbar.make(homeScreenContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        Location lastKnownLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        if (lastKnownLocation != null) {
+            lastKnownLongitude = lastKnownLocation.getLongitude();
+            lastKnownLatitude = lastKnownLocation.getLatitude();
+
+            Geocoder geocoder = new Geocoder(getBaseContext(), Locale.getDefault());
+            List<Address> addresses = null;
+            try {
+                addresses = geocoder.getFromLocation(lastKnownLatitude, lastKnownLongitude, 1);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (addresses != null) {
+                if (addresses.size() > 0) {
+                    lastKnownCity = addresses.get(0).getLocality();
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Snackbar.make(homeScreenContainer, R.string.unable_to_connect_to_play_services_message, Snackbar.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Snackbar.make(homeScreenContainer, R.string.unable_to_connect_to_play_services_message, Snackbar.LENGTH_SHORT).show();
+        if (resolvingGooglePlayConnectionError) {
+            return;
+        } else if (connectionResult.hasResolution()) {
+            try {
+                resolvingGooglePlayConnectionError = true;
+                connectionResult.startResolutionForResult(this, REQUEST_RESOLVE_ERROR);
+            } catch (IntentSender.SendIntentException e) {
+                googleApiClient.connect();
+            }
+        } else {
+            Snackbar.make(homeScreenContainer, R.string.unable_to_connect_to_play_services_message, Snackbar.LENGTH_SHORT).show();
+            resolvingGooglePlayConnectionError = false;
+        }
+
+    }
+
+    @Override
+    public void onShareClicked(File file) {
+        if (file != null) {
+            Intent shareIntent = new Intent();
+            shareIntent.setAction(Intent.ACTION_SEND);
+            shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(file.toString()));
+            shareIntent.setType("image/jpeg");
+            List<ResolveInfo> resInfo = getPackageManager().queryIntentActivities(shareIntent, 0);
+            if (resInfo != null) {
+                for (ResolveInfo resolveInfo : resInfo) {
+                    if (resolveInfo.activityInfo.packageName.contains("facebook")) {
+                        shareIntent.setPackage(resolveInfo.activityInfo.packageName);
+                        startActivity(Intent.createChooser(shareIntent, "Share"));
+                        break;
+                    }
+                }
+            } else {
+                Snackbar.make(homeScreenContainer, R.string.install_facebook_app, Snackbar.LENGTH_SHORT)
+                        .setAction(R.string.install, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent intent = new Intent(Intent.ACTION_VIEW);
+                                intent.setData(Uri.parse(String.format(getString(R.string.play_store_uri_format), "com.facebook.katana")));
+                            }
+                        }).show();
+            }
+        }
+    }
+
+    @Override
+    public void OnViewClicked(File file) {
+        viewFileInExternalApp(file);
+    }
+
+    private class FileClickListener implements ImageFilesAdapter.FilesAdapterActionClickListener {
+
+        @Override
+        public void onFileClicked(DbxFiles.FileMetadata file) {
+            downloadFile(file);
+        }
+    }
+
+    private void resetToolbarTitle() {
+        toolbar.setTitle(R.string.app_name);
+        progressBar.setVisibility(View.GONE);
+    }
+
     private void downloadFile(DbxFiles.FileMetadata file) {
+        toolbar.setTitle(R.string.downloading);
         progressBar.setVisibility(View.VISIBLE);
         new DownloadFileTask(HomeScreenActivity.this, DropboxClient.files()).execute(file);
     }
+
+    private File createImageFile() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = timeStamp + "_";
+        File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,
+                ".png",
+                storageDir
+        );
+
+        currentPhotoPath = "file:" + image.getAbsolutePath();
+        photoPathForPicassa = image.getAbsolutePath();
+        return image;
+    }
+
 
     private void viewFileInExternalApp(File result) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -165,105 +337,4 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_IMAGE_CAPTURE) {
-            Uri uri = null;
-            if (data != null) {
-                uri = data.getData();
-            }
-            if (uri == null && currentPhotoPath != null) {
-                uri = Uri.fromFile(new File(currentPhotoPath));
-                UploadPictureDialogFragment uploadPictureDialogFragment = UploadPictureDialogFragment.newInstance(photoPathForPicassa);
-                uploadPictureDialogFragment.show(getFragmentManager(), "UPLOAD_DIALOG_FRAGMENT_TAG");
-            }
-        }
-    }
-
-    private File createImageFile() throws IOException {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,
-                ".png",
-                storageDir
-        );
-
-        currentPhotoPath = "file:" + image.getAbsolutePath();
-        photoPathForPicassa = image.getAbsolutePath();
-        return image;
-    }
-
-    @Override
-    public void onUploadClicked(String currentPhotoPath) {
-        if (hasToken()) {
-            Log.e("findMe", "calling upload file");
-            uploadFile(this.currentPhotoPath);
-        } else {
-            Auth.startOAuth2Authentication(this, DropboxApp.DROPBOX_APP_KEY);
-        }
-    }
-
-    private void uploadFile(String fileUri) {
-        progressBar.setVisibility(View.VISIBLE);
-        new UploadFileTask(this, DropboxClient.files()).execute(fileUri, currentPhotoPath);
-    }
-
-    @Subscribe
-    public void onUploadCompleted(OnUploadSuccessfulEvent result) {
-        progressBar.setVisibility(View.GONE);
-        Snackbar.make(homeScreenContainer, R.string.upload_successful, Snackbar.LENGTH_SHORT).show();
-    }
-
-    @Subscribe
-    public void onUploadFailedEvent(OnUploadFailedEvent event) {
-        if (event.getException() != null) {
-            Snackbar.make(homeScreenContainer, R.string.generic_error_message, Snackbar.LENGTH_SHORT).show();
-        }
-        progressBar.setVisibility(View.GONE);
-    }
-
-
-    @Subscribe
-    public void onDataLoadedEvent(OnDataLoadedEvent event) {
-        progressBar.setVisibility(View.GONE);
-        adapter.setFiles(event.getResult().entries);
-    }
-
-    @Subscribe
-    public void onDataLoadFailedEvent(OnDataLoadFailedEvent event) {
-        progressBar.setVisibility(View.GONE);
-        Toast.makeText(HomeScreenActivity.this,
-                "An error has occurred",
-                Toast.LENGTH_SHORT)
-                .show();
-    }
-
-    @Subscribe
-    public void onDownloadFileSuccessEvent(OnDownloadFileSuccessEvent event) {
-        progressBar.setVisibility(View.GONE);
-        File file = event.getFile();
-        if (file != null) {
-            viewFileInExternalApp(file);
-        }
-    }
-
-    @Subscribe
-    public void onDownloadFileFailedEvent(OnDownloadFileFailedEvent event) {
-        progressBar.setVisibility(View.GONE);
-        Toast.makeText(HomeScreenActivity.this,
-                "An error has occurred",
-                Toast.LENGTH_SHORT)
-                .show();
-    }
-
-    private class FileClickListener implements  FilesAdapter.FilesAdapterActionClickListener {
-
-        @Override
-        public void onFileClicked(DbxFiles.FileMetadata file) {
-            downloadFile(file);
-        }
-    }
 }

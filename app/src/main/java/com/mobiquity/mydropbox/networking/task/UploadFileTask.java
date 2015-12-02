@@ -3,6 +3,7 @@ package com.mobiquity.mydropbox.networking.task;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.text.TextUtils;
 
 import com.dropbox.core.DbxException;
 import com.dropbox.core.v2.DbxFiles;
@@ -32,16 +33,19 @@ public class UploadFileTask extends AsyncTask<String, Void, DbxFiles.FileMetadat
     @Override
     protected DbxFiles.FileMetadata doInBackground(String... params) {
         String localUri = params[0];
+        String city = params[1];
         File localFile = UriHelpers.getFileForUri(context, Uri.parse(localUri));
 
         if (localFile != null) {
-            String remoteFolderPath = params[1];
             String remoteFileName = localFile.getName();
-
+            String fileName = remoteFileName;
+            if (!TextUtils.isEmpty(city)) {
+                fileName = city + "_" + remoteFileName;
+            }
             try {
                 InputStream inputStream = new FileInputStream(localFile);
                 try {
-                    files.uploadBuilder("/Sekhar.png")
+                    files.uploadBuilder("/" + fileName)
                             .autorename(true)
                             .mode(DbxFiles.WriteMode.overwrite)
                             .run(inputStream);
@@ -50,7 +54,6 @@ public class UploadFileTask extends AsyncTask<String, Void, DbxFiles.FileMetadat
                 }
             } catch (DbxException | IOException e) {
                 e.printStackTrace();
-                bus.post(new OnUploadFailedEvent(e));
             }
         }
 
@@ -62,7 +65,7 @@ public class UploadFileTask extends AsyncTask<String, Void, DbxFiles.FileMetadat
     protected void onPostExecute(DbxFiles.FileMetadata result) {
         super.onPostExecute(result);
         if (result == null) {
-            bus.post(new OnUploadFailedEvent(null));
+            bus.post(new OnUploadFailedEvent());
         } else {
             bus.post(new OnUploadSuccessfulEvent(result));
         }

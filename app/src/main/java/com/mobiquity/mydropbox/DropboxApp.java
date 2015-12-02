@@ -9,7 +9,7 @@ import com.squareup.otto.ThreadEnforcer;
 public class DropboxApp extends Application {
 
     public static final  String DROPBOX_APP_KEY = "fzmyv43ureiky2i";
-    public static Bus bus;
+    private static Bus bus;
 
     @Override
     public void onCreate() {

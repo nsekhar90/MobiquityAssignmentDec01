@@ -16,18 +16,18 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
-public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.MetadataViewHolder> {
+public class ImageFilesAdapter extends RecyclerView.Adapter<ImageFilesAdapter.MetadataViewHolder> {
 
-    private List<DbxFiles.Metadata> mFiles;
+    private List<DbxFiles.Metadata> filesList;
     private final Picasso picasso;
     private final FilesAdapterActionClickListener listener;
 
     public void setFiles(List<DbxFiles.Metadata> files) {
-        mFiles = files;
+        filesList = files;
         notifyDataSetChanged();
     }
 
-    public FilesAdapter(Picasso picasso, FilesAdapterActionClickListener listener) {
+    public ImageFilesAdapter(Picasso picasso, FilesAdapterActionClickListener listener) {
         this.picasso = picasso;
         this.listener = listener;
     }
@@ -42,65 +42,57 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.MetadataView
 
     @Override
     public void onBindViewHolder(MetadataViewHolder metadataViewHolder, int i) {
-        metadataViewHolder.bind(mFiles.get(i));
+        metadataViewHolder.bind(filesList.get(i));
     }
 
     @Override
     public long getItemId(int position) {
-        return mFiles.get(position).pathLower.hashCode();
+        return filesList.get(position).pathLower.hashCode();
     }
 
     @Override
     public int getItemCount() {
-        return mFiles == null ? 0 : mFiles.size();
+        return filesList == null ? 0 : filesList.size();
     }
 
     public class MetadataViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        private final TextView mTextView;
-        private final ImageView mImageView;
-        private DbxFiles.Metadata mItem;
+
+        private final TextView imageTitleTextView;
+        private final ImageView imageView;
+        private DbxFiles.Metadata imageMetaData;
 
         public MetadataViewHolder(View itemView) {
             super(itemView);
-            mImageView = (ImageView) itemView.findViewById(R.id.image);
-            mTextView = (TextView) itemView.findViewById(R.id.text);
+            imageView = (ImageView) itemView.findViewById(R.id.image);
+            imageTitleTextView = (TextView) itemView.findViewById(R.id.text);
             itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
 
-           if (mItem instanceof DbxFiles.FileMetadata) {
-                listener.onFileClicked((DbxFiles.FileMetadata) mItem);
+           if (imageMetaData instanceof DbxFiles.FileMetadata) {
+                listener.onFileClicked((DbxFiles.FileMetadata) imageMetaData);
             }
         }
 
         public void bind(DbxFiles.Metadata item) {
-            mItem = item;
-            mTextView.setText(mItem.name);
-
-            // Load based on file path
-            // Prepending a scheme to get it to
-            // be picked up by DropboxPicassoRequestHandler
-
+            imageMetaData = item;
+            imageTitleTextView.setText(imageMetaData.name);
             if (item instanceof DbxFiles.FileMetadata) {
                 MimeTypeMap mime = MimeTypeMap.getSingleton();
                 String ext = item.name.substring(item.name.indexOf(".") + 1);
                 String type = mime.getMimeTypeFromExtension(ext);
                 if (type != null && type.startsWith("image/")) {
                     picasso.load(FileThumbnailRequestHandler.buildPicassoUri((DbxFiles.FileMetadata) item))
-                            .placeholder(R.drawable.ic_photo_grey_600_36dp)
-                            .error(R.drawable.ic_photo_grey_600_36dp)
-                            .into(mImageView);
+                            .placeholder(R.drawable.ic_photo_grey_rounded)
+                            .error(R.drawable.ic_photo_grey_rounded)
+                            .into(imageView);
                 } else {
-                    picasso.load(R.drawable.ic_insert_drive_file_blue_36dp)
+                    picasso.load(R.drawable.ic_insert_drive_file)
                             .noFade()
-                            .into(mImageView);
+                            .into(imageView);
                 }
-            } else if (item instanceof DbxFiles.FolderMetadata) {
-                picasso.load(R.drawable.ic_folder_blue_36dp)
-                        .noFade()
-                        .into(mImageView);
             }
         }
     }

@@ -10,7 +10,21 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="upload_image">Upload the image</string>
     <string name="upload_successful">Upload Succesful!</string>
-
-    <!--Login Screen -->
+    <string name="unable_to_connect_to_play_services_message">We were not able to connect to play services, hence won\'t be able to store location of your photos</string>
+    <string name="image_latitude_text">"latitude: %1$s"</string>
+    <string name="image_longitude_text">"longitude: %1$s"</string>
+    <string name="image_city_text">"city: %1$s"</string>
+    <string name="install">install</string>
+    <string name="play_store_uri_format">market://details?id=%s</string>
+    <string name="download">Download</string>
+    <string name="share_with_facebook">Share using facebook</string>
+    <string name="view">View</string>
+    <string name="install_facebook_app">Please install facebook app</string>
+    <string name="uploading">Uploading …</string>
+    <string name="downloading">Downloading…</string>
+    <string name="loading">Loading …</string>
+    <string name="upload">upload</string>
+    <string name="cancel">cancel</string>
+    <string name="image_options_dialog_title">Choose an option</string>
 
 </resources>
