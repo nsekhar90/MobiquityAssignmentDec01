@@ -47,11 +47,43 @@
             android:padding="5dp"
             android:visibility="gone">
 
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/images_recycler_view"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+                android:layout_height="match_parent">
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/images_recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+                <LinearLayout
+                    android:id="@+id/empty_view_for_recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:background="@color/white"
+                    android:paddingTop="50dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/illustration_empty_folder" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="24dp"
+                        android:gravity="center"
+                        android:text="@string/no_files_in_folder_text"
+                        android:textSize="16sp" />
+
+                </LinearLayout>
+
+            </FrameLayout>
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/fab"
@@ -76,11 +108,11 @@
                 android:id="@+id/login_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="10dp"
+                android:layout_marginBottom="75dp"
                 android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 android:gravity="center"
                 android:text="Please Login to use the app"
-                android:layout_marginBottom="75dp"
                 android:textColor="@color/white"
                 android:textSize="45dp" />
 

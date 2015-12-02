@@ -21,15 +21,17 @@ public class ImageFilesAdapter extends RecyclerView.Adapter<ImageFilesAdapter.Me
     private List<DbxFiles.Metadata> filesList;
     private final Picasso picasso;
     private final FilesAdapterActionClickListener listener;
+    private EmptyAdapterListener emptyAdapterListener;
 
     public void setFiles(List<DbxFiles.Metadata> files) {
         filesList = files;
         notifyDataSetChanged();
     }
 
-    public ImageFilesAdapter(Picasso picasso, FilesAdapterActionClickListener listener) {
+    public ImageFilesAdapter(Picasso picasso, FilesAdapterActionClickListener listener, EmptyAdapterListener emptyAdapterListener) {
         this.picasso = picasso;
         this.listener = listener;
+        this.emptyAdapterListener = emptyAdapterListener;
     }
 
     @Override
@@ -52,7 +54,9 @@ public class ImageFilesAdapter extends RecyclerView.Adapter<ImageFilesAdapter.Me
 
     @Override
     public int getItemCount() {
-        return filesList == null ? 0 : filesList.size();
+        int count = filesList == null ? 0 : filesList.size();
+        emptyAdapterListener.toggleEmptyView(count == 0);
+        return count;
     }
 
     public class MetadataViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -100,5 +104,10 @@ public class ImageFilesAdapter extends RecyclerView.Adapter<ImageFilesAdapter.Me
     public interface FilesAdapterActionClickListener {
 
         void onFileClicked(DbxFiles.FileMetadata file);
+    }
+
+    public interface EmptyAdapterListener {
+
+        void toggleEmptyView(boolean show);
     }
 }

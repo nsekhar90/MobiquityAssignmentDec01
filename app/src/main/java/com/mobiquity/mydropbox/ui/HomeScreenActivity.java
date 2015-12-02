@@ -21,6 +21,7 @@ import android.view.Menu;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ViewSwitcher;
 
@@ -53,7 +54,8 @@ import java.util.Locale;
 
 public class HomeScreenActivity extends DropboxActivity implements View.OnClickListener,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-        ImageOptionsDialogFragment.ImageOptionsDialogFragmentActionListener {
+        ImageOptionsDialogFragment.ImageOptionsDialogFragmentActionListener,
+        ImageFilesAdapter.EmptyAdapterListener, ImageFilesAdapter.FilesAdapterActionClickListener {
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     // Request code to use when launching the resolution activity
@@ -76,6 +78,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     private double lastKnownLatitude = 0;
     private double lastKnownLongitude = 0;
     private String lastKnownCity;
+    private LinearLayout emptyViewForRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +95,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         homeScreenContainer = (CoordinatorLayout) findViewById(R.id.home_screen_container);
         loginScreenSwitcher = (ViewSwitcher) findViewById(R.id.login_view_switcher);
         progressBar = (ProgressBar) findViewById(R.id.download_progress_bar);
+        emptyViewForRecyclerView = (LinearLayout) findViewById(R.id.empty_view_for_recycler_view);
 
         filesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         Button loginButton = (Button) findViewById(R.id.login_button);
@@ -125,7 +129,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     protected void loadData() {
         toolbar.setTitle(R.string.loading);
         progressBar.setVisibility(View.VISIBLE);
-        adapter = new ImageFilesAdapter(PicassoClient.getPicasso(), new FileClickListener());
+        adapter = new ImageFilesAdapter(PicassoClient.getPicasso(), this, this);
         new ListItemsInFolderTask(DropboxClient.files()).execute("");
         filesRecyclerView.setAdapter(adapter);
     }
@@ -268,12 +272,15 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         viewFileInExternalApp(file);
     }
 
-    private class FileClickListener implements ImageFilesAdapter.FilesAdapterActionClickListener {
+    @Override
+    public void toggleEmptyView(boolean show) {
+        emptyViewForRecyclerView.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
 
-        @Override
-        public void onFileClicked(DbxFiles.FileMetadata file) {
-            downloadFile(file);
-        }
+
+    @Override
+    public void onFileClicked(DbxFiles.FileMetadata file) {
+        downloadFile(file);
     }
 
     private void resetToolbarTitle() {
