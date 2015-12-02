@@ -18,6 +18,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
@@ -26,6 +27,8 @@ import android.widget.ProgressBar;
 import android.widget.ViewSwitcher;
 
 import com.dropbox.core.v2.DbxFiles;
+import com.flipboard.bottomsheet.BottomSheetLayout;
+import com.flipboard.bottomsheet.commons.MenuSheetView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
@@ -41,7 +44,6 @@ import com.mobiquity.mydropbox.event.OnImageFilesLoadFailedEvent;
 import com.mobiquity.mydropbox.event.OnImageFilesLoadedEvent;
 import com.mobiquity.mydropbox.networking.task.DownloadFileTask;
 import com.mobiquity.mydropbox.networking.task.ListItemsInFolderTask;
-import com.mobiquity.mydropbox.ui.fragment.dialog.ImageOptionsDialogFragment;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
@@ -54,7 +56,6 @@ import java.util.Locale;
 
 public class HomeScreenActivity extends DropboxActivity implements View.OnClickListener,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-        ImageOptionsDialogFragment.ImageOptionsDialogFragmentActionListener,
         ImageFilesAdapter.EmptyAdapterListener, ImageFilesAdapter.FilesAdapterActionClickListener {
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -81,6 +82,7 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     private double lastKnownLongitude = 0;
     private String lastKnownCity;
     private LinearLayout emptyViewForRecyclerView;
+    private BottomSheetLayout bottomSheetLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,6 +104,8 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         filesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         Button loginButton = (Button) findViewById(R.id.login_button);
         loginButton.setOnClickListener(this);
+
+        bottomSheetLayout = (BottomSheetLayout) findViewById(R.id.bottomsheet);
 
         loginScreenSwitcher.setDisplayedChild(hasToken() ? 0 : 1);
 
@@ -199,9 +203,12 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     @Subscribe
     public void onDownloadFileSuccessEvent(OnDownloadFileSuccessEvent event) {
         resetToolbarTitle();
-        File file = event.getFile();
-        ImageOptionsDialogFragment imageOptionsDialogFragment = ImageOptionsDialogFragment.newInstance(file);
-        imageOptionsDialogFragment.show(getFragmentManager(), TAG_IMAGE_OPTIONS_DIALOG_FRAGMENT);
+        File file = event.getFileContainer().getFile();
+        if (event.getFileContainer().isShare()) {
+            onShareClicked(file);
+        } else {
+            viewFileInExternalApp(file);
+        }
     }
 
     @Subscribe
@@ -256,7 +263,6 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
 
     }
 
-    @Override
     public void onShareClicked(File file) {
         if (file != null) {
             Intent shareIntent = new Intent();
@@ -286,19 +292,13 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     }
 
     @Override
-    public void OnViewClicked(File file) {
-        viewFileInExternalApp(file);
-    }
-
-    @Override
     public void toggleEmptyView(boolean show) {
         emptyViewForRecyclerView.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
-
     @Override
     public void onFileClicked(DbxFiles.FileMetadata file) {
-        downloadFile(file);
+        showMenuSheet(file);
     }
 
     private void resetToolbarTitle() {
@@ -306,10 +306,10 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         progressBar.setVisibility(View.GONE);
     }
 
-    private void downloadFile(DbxFiles.FileMetadata file) {
+    private void downloadFile(DbxFiles.FileMetadata file, boolean isShareSelected) {
         toolbar.setTitle(R.string.downloading);
         progressBar.setVisibility(View.VISIBLE);
-        new DownloadFileTask(HomeScreenActivity.this, DropboxClient.files()).execute(file);
+        new DownloadFileTask(HomeScreenActivity.this, DropboxClient.files()).execute(file, isShareSelected);
     }
 
     private File createImageFile() throws IOException {
@@ -360,6 +360,29 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
         } else {
             Snackbar.make(homeScreenContainer, R.string.no_camera_app_error_message, Snackbar.LENGTH_SHORT).show();
         }
+    }
+
+    private void showMenuSheet(final DbxFiles.FileMetadata metadata) {
+        MenuSheetView menuSheetView =
+                new MenuSheetView(this, MenuSheetView.MenuType.LIST, R.string.image_options_bottom_sheet_title, new MenuSheetView.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        if (bottomSheetLayout.isSheetShowing()) {
+                            bottomSheetLayout.dismissSheet();
+                        }
+                        switch (item.getItemId()) {
+                            case R.id.image_view:
+                                downloadFile(metadata, false);
+                                return true;
+                            case R.id.image_share_on_fb:
+                                downloadFile(metadata, true);
+                                return true;
+                        }
+                        return false;
+                    }
+                });
+        menuSheetView.inflateMenu(R.menu.image_options);
+        bottomSheetLayout.showWithSheetView(menuSheetView);
     }
 
 }

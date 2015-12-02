@@ -25,7 +25,7 @@
     <string name="loading">Loading …</string>
     <string name="upload">upload</string>
     <string name="cancel">cancel</string>
-    <string name="image_options_dialog_title">Choose an option</string>
+    <string name="image_options_bottom_sheet_title">Choose an option</string>
     <string name="no_files_in_folder_text">Look\'s like you don\'t have any images uploaded yet. Start Uploading Images!</string>
 
 </resources>

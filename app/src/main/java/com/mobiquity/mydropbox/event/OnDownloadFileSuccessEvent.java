@@ -1,16 +1,16 @@
 package com.mobiquity.mydropbox.event;
 
-import java.io.File;
+import com.mobiquity.mydropbox.networking.task.model.ReturnTypeForDownloadTask;
 
 public class OnDownloadFileSuccessEvent {
 
-    private File file;
+    private ReturnTypeForDownloadTask downloadedFileContainer;
 
-    public OnDownloadFileSuccessEvent(File result) {
-        this.file = result;
+    public OnDownloadFileSuccessEvent(ReturnTypeForDownloadTask result) {
+        downloadedFileContainer = result;
     }
 
-    public File getFile() {
-        return file;
+    public ReturnTypeForDownloadTask getFileContainer() {
+        return downloadedFileContainer;
     }
 }
