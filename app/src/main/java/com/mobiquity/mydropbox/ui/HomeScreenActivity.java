@@ -194,7 +194,10 @@ public class HomeScreenActivity extends DropboxActivity implements View.OnClickL
     @Subscribe
     public void onDataLoadedEvent(OnImageFilesLoadedEvent event) {
         resetToolbarTitle();
-        adapter.setFiles(event.getResult().entries);
+        //update only if size of list changes
+        if (adapter.getItemCount() != event.getResult().entries.size()) {
+            adapter.setFiles(event.getResult().entries);
+        }
     }
 
     @Subscribe
